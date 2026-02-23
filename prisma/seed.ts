@@ -290,6 +290,72 @@ async function main() {
       stock: 20,
       stockMinimo: 5,
     },
+    // Productos 11–15
+    {
+      idCategoriaProducto: catCamisa.id,
+      nombreProducto: "Camisa Lino Casual",
+      marca: "Reserved",
+      talla: "L",
+      color: "Celeste",
+      temporada: "VERANO" as const,
+      precioVenta: 210.0,
+      costo: 105.0,
+      margen: parseFloat((((210.0 - 105.0) / 210.0) * 100).toFixed(2)),
+      stock: 14,
+      stockMinimo: 4,
+    },
+    {
+      idCategoriaProducto: catPantalon.id,
+      nombreProducto: "Jogger Deportivo",
+      marca: "Adidas",
+      talla: "M",
+      color: "Gris",
+      temporada: "TODO_EL_ANNO" as const,
+      precioVenta: 290.0,
+      costo: 140.0,
+      margen: parseFloat((((290.0 - 140.0) / 290.0) * 100).toFixed(2)),
+      stock: 9,
+      stockMinimo: 4,
+    },
+    {
+      idCategoriaProducto: catVestido.id,
+      nombreProducto: "Vestido Verano Estampado",
+      marca: "Bershka",
+      talla: "M",
+      color: "Amarillo",
+      temporada: "VERANO" as const,
+      precioVenta: 340.0,
+      costo: 155.0,
+      margen: parseFloat((((340.0 - 155.0) / 340.0) * 100).toFixed(2)),
+      stock: 4,
+      stockMinimo: 3,
+    },
+    {
+      idCategoriaProducto: catCalzado.id,
+      nombreProducto: "Bota Cuero Mujer",
+      marca: "Steve Madden",
+      talla: "38",
+      color: "Marrón",
+      temporada: "OTONO" as const,
+      precioVenta: 580.0,
+      costo: 310.0,
+      margen: parseFloat((((580.0 - 310.0) / 580.0) * 100).toFixed(2)),
+      stock: 2,
+      stockMinimo: 3,
+    },
+    {
+      idCategoriaProducto: catAccesorio.id,
+      nombreProducto: "Gorro Lana Tejido",
+      marca: "Genérico",
+      talla: "Única",
+      color: "Vino",
+      temporada: "INVIERNO" as const,
+      precioVenta: 75.0,
+      costo: 30.0,
+      margen: parseFloat((((75.0 - 30.0) / 75.0) * 100).toFixed(2)),
+      stock: 30,
+      stockMinimo: 8,
+    },
   ]
 
   for (const producto of productos) {
@@ -306,7 +372,7 @@ async function main() {
     })
   }
 
-  console.log("✅ 10 productos creados")
+  console.log("✅ 15 productos creados")
   console.log("\n🎉 Seed completado exitosamente!")
   console.log("─────────────────────────────────────")
   console.log("  Usuario ADMIN    → usuario: admin    | password: admin123")
