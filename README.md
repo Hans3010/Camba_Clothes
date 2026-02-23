@@ -1,36 +1,219 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# CambaClothes — Sistema POS
 
-## Getting Started
+Sistema de gestión comercial interno para una boutique de ropa en Santa Cruz, Bolivia.
+Desarrollado como proyecto académico con Next.js 15 y PostgreSQL.
 
-First, run the development server:
+> **Uso interno en mostrador.** No es e-commerce, no tiene facturación fiscal ni pasarelas de pago externas.
+
+---
+
+## Equipo
+
+| Nombre                     | Rol             |
+|----------------------------|-----------------|
+| Hans Ribera Morant         | Team Lead       |
+| John Jairo Zurita          | Desarrollador   |
+| Luis Merma Alarcon         | Scrum Master    |
+| Jhonnathan Mamani Canaviri | Desarrollador   |
+
+---
+
+## Stack
+
+- **Framework:** Next.js 15 (App Router) + TypeScript
+- **Base de datos:** PostgreSQL + Prisma ORM 7
+- **Autenticación:** NextAuth.js v4 (JWT)
+- **UI:** shadcn/ui + Tailwind CSS v4
+- **Formularios:** react-hook-form + zod
+- **Tablas:** @tanstack/react-table
+
+---
+
+## Requisitos previos
+
+- Node.js 20+
+- PostgreSQL corriendo localmente (o remoto)
+
+---
+
+## Instalación
 
 ```bash
+# 1. Clonar el repositorio
+git clone https://github.com/Hans3010/Camba_Clothes.git
+cd camba-clothes
+
+# 2. Instalar dependencias
+npm install
+
+# 3. Configurar variables de entorno
+cp .env.example .env
+# Editar .env con tus credenciales de PostgreSQL
+
+# 4. Aplicar migraciones
+npx prisma migrate dev
+
+# 5. Cargar datos iniciales
+npm run seed
+
+# 6. Levantar el servidor de desarrollo
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Abrir [http://localhost:3000](http://localhost:3000)
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+**Credenciales de prueba:**
+```
+usuario: admin      | password: admin123
+usuario: vendedor   | password: vendedor123
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+---
 
-## Learn More
+## Variables de entorno
 
-To learn more about Next.js, take a look at the following resources:
+Crear un archivo `.env` en la raíz :
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```env
+DATABASE_URL="postgresql://USER:PASSWORD@localhost:5432/camba_clothes"
+NEXTAUTH_SECRET="un_secret_seguro_y_largo"
+NEXTAUTH_URL="http://localhost:3000"
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+---
 
-## Deploy on Vercel
+## Scripts disponibles
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+| Comando | Descripción |
+|---------|-------------|
+| `npm run dev` | Servidor de desarrollo |
+| `npm run build` | Build de producción |
+| `npm run seed` | Carga datos iniciales en la DB |
+| `npm run db:reset` | Resetea la DB y vuelve a seedear |
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+---
+
+## Estructura del proyecto
+
+```
+src/
+├── app/
+│   ├── (auth)/               ← Páginas de login (sin sidebar)
+│   │   └── login/page.tsx
+│   ├── (dashboard)/          ← Todas las páginas protegidas
+│   │   ├── layout.tsx        ← Sidebar + Header compartido
+│   │   ├── dashboard/        ← KPIs
+│   │   ├── pos/              ← Punto de venta
+│   │   ├── ventas/           ← Historial de ventas
+│   │   ├── productos/        ← CRUD productos
+│   │   ├── clientes/         ← CRUD clientes
+│   │   ├── inventario/       ← Movimientos de stock
+│   │   ├── proveedores/      ← CRUD proveedores
+│   │   ├── compras/          ← Compras a proveedores
+│   │   ├── reportes/         ← Gráficos y reportes
+│   │   └── configuracion/    ← Usuarios, categorías, tipos de pago
+│   └── api/                  ← API Routes (Next.js)
+├── components/
+│   ├── ui/                   ← Componentes shadcn (NO editar)
+│   ├── layout/               ← Sidebar y Header
+│   ├── forms/                ← Formularios reutilizables
+│   ├── tables/               ← Columnas y DataTables por módulo
+│   └── pos/                  ← Componentes del punto de venta
+├── lib/
+│   ├── prisma.ts             ← Singleton de PrismaClient
+│   ├── auth.ts               ← Configuración de NextAuth
+│   ├── utils.ts              ← Utilidades (cn, formatCurrency)
+│   └── validations/          ← Schemas de Zod por módulo
+├── types/
+│   └── next-auth.d.ts        ← Tipos extendidos de sesión
+├── hooks/                    ← Custom hooks
+└── middleware.ts             ← Protección de rutas
+prisma/
+├── schema.prisma             ← Esquema de la base de datos
+├── migrations/               ← Migraciones generadas automáticamente
+└── seed.ts                   ← Datos iniciales
+```
+
+### Dónde trabaja cada módulo
+
+| Módulo | Archivos a tocar |
+|--------|-----------------|
+| Auth / Usuarios | `app/(dashboard)/configuracion/`, `app/api/usuarios/`, `components/forms/` |
+| Productos | `app/(dashboard)/productos/`, `app/api/productos/`, `components/tables/` |
+| Clientes | `app/(dashboard)/clientes/`, `app/api/clientes/`, `components/forms/` |
+| Proveedores | `app/(dashboard)/proveedores/`, `app/api/proveedores/` |
+| POS / Ventas | `app/(dashboard)/pos/`, `app/(dashboard)/ventas/`, `app/api/ventas/`, `components/pos/` |
+| Compras | `app/(dashboard)/compras/`, `app/api/compras/` |
+| Inventario | `app/(dashboard)/inventario/`, `app/api/movimientos/` |
+| Dashboard / Reportes | `app/(dashboard)/dashboard/`, `app/(dashboard)/reportes/`, `app/api/reportes/` |
+
+> **Nunca editar** `src/components/ui/` ni `src/generated/prisma/` — son archivos generados automáticamente.
+
+---
+
+## Flujo de trabajo con Git
+
+### Ramas
+
+```
+main      ← código estable y revisado (solo via PR)
+develop   ← rama de integración (aquí se trabaja)
+```
+
+**Regla principal: nunca hacer push directo a `main`.**
+Todo el trabajo va a `develop`. Cuando un módulo esté completo y revisado, se hace un Pull Request de `develop` → `main`.
+
+### Flujo recomendado
+
+```bash
+# Antes de empezar a trabajar, siempre actualizar develop
+git checkout develop
+git pull origin develop
+
+# Trabajar, hacer cambios...
+
+# Subir a develop
+git add src/app/(dashboard)/productos/ src/app/api/productos/
+git commit -m "feat(productos): agregar CRUD completo con tabla y formulario"
+git push origin develop
+```
+
+### Convención de commits
+
+Poner siempre una descripción corta. Opcionalmente agregar un cuerpo con los puntos más importantes.
+
+**Formato:**
+```
+descripción corta en presente
+
+- Detalle 1
+- Detalle 2
+```
+
+
+
+**Ejemplos:**
+```bash
+git commit -m "se agregó la tabla con filtro y paginación"
+
+git commit -m "se implementó el carrito y confirmación de venta
+
+- Búsqueda de productos por nombre
+- Agregar/quitar items del carrito
+- Selección de tipo de pago
+- Registro de venta con transacción Prisma"
+
+```
+
+---
+
+## Consideraciones importantes
+
+- **Soft delete:** nunca usar `delete` en Prisma para registros con relaciones. Usar el campo `estado: "INACTIVO"` o `"ANULADO"`.
+- **Transacciones:** operaciones que afectan múltiples tablas (crear venta, registrar compra) deben usar `prisma.$transaction()`.
+- **Validación:** toda API Route debe validar el body con Zod antes de tocar la base de datos.
+- **Server vs Client Components:** por defecto todo es Server Component. Solo agregar `"use client"` cuando se necesiten hooks o eventos.
+- **Sesión de caja:** no se puede registrar una venta sin una `sesionCaja` con estado `"ABIERTA"`.
+- **Stock:** el campo `stock` vive en `Producto` y se actualiza atómicamente con cada venta/compra/ajuste.
+- **Moneda:** todo en BOB. Formatear precios como `Bs. 1,234.00`.
+- **Margen:** `((precioVenta - costo) / precioVenta) * 100`. Recalcular siempre que cambie precio o costo.
