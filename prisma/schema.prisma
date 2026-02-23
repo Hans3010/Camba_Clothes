@@ -17,6 +17,7 @@ datasource db {
 enum Rol {
   ADMIN
   VENDEDOR
+  JUAN
 }
 
 enum EstadoGeneral {
