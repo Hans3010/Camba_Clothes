@@ -47,10 +47,12 @@ cd camba-clothes
 npm install
 
 # 3. Configurar variables de entorno
-cp .env.example .env
+cp .env
 # Editar .env con tus credenciales de PostgreSQL
 
 # 4. Aplicar migraciones
+npx prisma generate
+
 npx prisma migrate dev
 
 # 5. Cargar datos iniciales
