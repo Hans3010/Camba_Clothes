@@ -1,8 +1,8 @@
 import { z } from "zod"
 
 export const abrirCajaSchema = z.object({
-  montoInicial: z.coerce
-    .number({ invalid_type_error: "Ingresa un monto válido" })
+  montoInicial: z
+    .number({ error: "Ingresa un monto válido" })
     .positive("El monto debe ser mayor a 0"),
 })
 

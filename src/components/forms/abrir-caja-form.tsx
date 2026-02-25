@@ -24,7 +24,7 @@ export function AbrirCajaForm() {
 
   const form = useForm<AbrirCajaValues>({
     resolver: zodResolver(abrirCajaSchema),
-    defaultValues: { montoInicial: undefined as unknown as number },
+    defaultValues: { montoInicial: undefined },
   })
 
   async function onSubmit(values: AbrirCajaValues) {
@@ -71,7 +71,8 @@ export function AbrirCajaForm() {
                     min="0.01"
                     placeholder="0.00"
                     className="pl-10"
-                    {...field}
+                    value={field.value ?? ""}
+                    onChange={(e) => field.onChange(e.target.valueAsNumber)}
                   />
                 </div>
               </FormControl>
