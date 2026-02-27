@@ -1,22 +1,45 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Package } from "lucide-react"
+"use client";
+
+import { useEffect, useState } from "react";
 
 export default function ProductosPage() {
+  const [productos, setProductos] = useState<any[]>([]); // 👈 inicializar como array
+
+  useEffect(() => {
+    fetch("/api/productos")
+      .then((res) => res.json())
+      .then((data) => {
+        // 👈 validar que la respuesta sea un array
+        if (Array.isArray(data)) {
+          setProductos(data);
+        } else {
+          console.error("Respuesta inesperada de la API:", data);
+          setProductos([]); // evitar romper el .map()
+        }
+      })
+      .catch((err) => {
+        console.error("Error al cargar productos:", err);
+        setProductos([]);
+      });
+  }, []);
+
   return (
-    <div className="space-y-4">
-      <h1 className="text-2xl font-bold">Productos</h1>
-      <Card className="max-w-md">
-        <CardHeader className="flex flex-row items-center gap-3 pb-2">
-          <Package className="h-5 w-5 text-muted-foreground" />
-          <CardTitle className="text-base">Módulo Productos — En desarrollo</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <p className="text-sm text-muted-foreground">
-            CRUD completo de productos: nombre, categoría, talla, color, precio de venta,
-            costo, margen, stock y stock mínimo.
-          </p>
-        </CardContent>
-      </Card>
+    <div className="p-6">
+      <h1 className="text-xl font-bold mb-4">Lista de productos</h1>
+
+      {productos.length === 0 ? (
+        <p className="text-gray-500">No hay productos disponibles</p>
+      ) : (
+        <ul className="space-y-2">
+          {productos.map((p) => (
+            <li key={p.id} className="border p-2 rounded">
+              <p className="font-semibold">{p.nombreProducto}</p>
+              <p>Precio: {p.precioVenta} Bs.</p>
+              <p>Categoría: {p.categoria?.nombreCategoria ?? "Sin categoría"}</p>
+            </li>
+          ))}
+        </ul>
+      )}
     </div>
-  )
+  );
 }

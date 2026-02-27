@@ -18,6 +18,7 @@ export const config = {
     "/compras/:path*",
     "/reportes/:path*",
     "/configuracion/:path*",
+    "/categoria",
     "/caja/:path*",
   ],
 }

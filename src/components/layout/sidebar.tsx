@@ -23,6 +23,7 @@ const navItems = [
   { href: "/caja",          label: "Caja",           icon: Vault },
   { href: "/pos",           label: "POS",            icon: ShoppingCart },
   { href: "/ventas",        label: "Ventas",         icon: Receipt },
+  { href: "/categoria",        label: "Categoria",         icon: Receipt },
   { href: "/productos",     label: "Productos",      icon: Package },
   { href: "/clientes",      label: "Clientes",       icon: Users },
   { href: "/inventario",    label: "Inventario",     icon: Warehouse },

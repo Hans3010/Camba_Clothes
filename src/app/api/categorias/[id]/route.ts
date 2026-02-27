@@ -1,0 +1,21 @@
+import { NextRequest, NextResponse } from 'next/server';
+import { prisma } from '@/lib/prisma';
+import { categoriaSchema } from '@/lib/validations/categoria';
+
+export async function PUT(
+  req: NextRequest,
+  { params }: { params: { id: string } },
+) {
+  try {
+    const { id } = await params;
+    const body = await req.json();
+    const validated = categoriaSchema.parse(body);
+    const categoria = await prisma.categoriaProducto.update({
+      where: { id: Number(id) },
+      data: validated,
+    });
+    return NextResponse.json(categoria);
+  } catch (error) {
+    return NextResponse.json({ error: 'Error al actualizar' }, { status: 500 });
+  }
+}
