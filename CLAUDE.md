@@ -14,51 +14,68 @@ Solo uso interno en mostrador. Dos roles: ADMIN y VENDEDOR.
 - **Tablas**: @tanstack/react-table con shadcn DataTable
 - **Notificaciones**: Sonner (toast)
 
-## Estructura del Proyecto
-```
+## Estructura Actual del Proyecto
+```text
 src/
 ├── app/
 │   ├── (auth)/
 │   │   └── login/page.tsx
 │   ├── (dashboard)/
 │   │   ├── layout.tsx              ← Sidebar + Header compartido
-│   │   ├── dashboard/page.tsx      ← KPIs principales
-│   │   ├── pos/page.tsx            ← Punto de venta (vista principal)
-│   │   ├── ventas/page.tsx         ← Historial de ventas
-│   │   ├── productos/page.tsx      ← CRUD productos
+│   │   ├── caja/page.tsx           ← Apertura/cierre de caja
+│   │   ├── categoria/page.tsx      ← Gestión de categorías
 │   │   ├── clientes/page.tsx       ← CRUD clientes
-│   │   ├── inventario/page.tsx     ← Movimientos de inventario
-│   │   ├── proveedores/page.tsx    ← CRUD proveedores
 │   │   ├── compras/page.tsx        ← Registro de compras
+│   │   ├── configuracion/page.tsx  ← Ajustes (roles, usuarios)
+│   │   ├── dashboard/page.tsx      ← KPIs principales
+│   │   ├── inventario/page.tsx     ← Movimientos de stock
+│   │   ├── pos/page.tsx            ← Punto de venta
+│   │   ├── productos/page.tsx      ← CRUD productos
+│   │   ├── proveedores/            ← CRUD proveedores
+│   │   │   ├── page.tsx
+│   │   │   └── nuevo/page.tsx
 │   │   ├── reportes/page.tsx       ← Reportes y gráficos
-│   │   └── configuracion/page.tsx  ← Usuarios, categorías, tipos de pago
+│   │   └── ventas/page.tsx         ← Historial de ventas
 │   └── api/
 │       ├── auth/[...nextauth]/route.ts
-│       ├── usuarios/route.ts
-│       ├── productos/route.ts
-│       ├── clientes/route.ts
-│       ├── ventas/route.ts
-│       ├── compras/route.ts
-│       ├── proveedores/route.ts
-│       ├── categorias/route.ts
-│       ├── sesion-caja/route.ts
-│       ├── movimientos/route.ts
-│       └── reportes/route.ts
+│       ├── categorias/             ← Endpoints API de categorías
+│       │   ├── route.ts
+│       │   └── [id]/route.ts
+│       ├── productos/              ← Endpoints API de productos
+│       │   ├── route.ts
+│       │   └── [id]/route.ts
+│       ├── proveedores/            ← Endpoints API de proveedores
+│       │   ├── route.ts
+│       │   └── [id]/route.ts
+│       └── sesion-caja/            ← Endpoints API de sesiones de caja
+│           ├── route.ts
+│           └── [id]/route.ts
 ├── components/
-│   ├── ui/                ← Componentes shadcn (no tocar manualmente)
-│   ├── layout/            ← Sidebar, Header, UserNav
-│   ├── forms/             ← Formularios reutilizables
-│   ├── tables/            ← Columnas y DataTables por módulo
-│   └── pos/               ← Componentes específicos del punto de venta
+│   ├── forms/                      ← Formularios interactivos
+│   │   ├── abrir-caja-form.tsx
+│   │   ├── categoria-form.tsx
+│   │   ├── producto-form.tsx
+│   │   └── proveedor-form.tsx
+│   ├── layout/                     ← Componentes de estructura
+│   │   ├── header.tsx
+│   │   └── sidebar.tsx
+│   ├── modules/                    ← Componentes modulares complejos
+│   │   └── categoria-tab.tsx
+│   ├── pos/                        ← UI específica del POS
+│   │   └── resumen-caja.tsx
+│   ├── tables/                     ← Columnas y configuraciones de tablas
+│   │   ├── productos-columns.tsx
+│   │   └── proveedores-columns.tsx
+│   └── ui/                         ← Componentes genéricos de shadcn/ui
+├── generated/                      ← Archivos generados automáticamente
+│   └── prisma/                     ← Tipos de base de datos
 ├── lib/
-│   ├── prisma.ts          ← Singleton de PrismaClient
-│   ├── auth.ts            ← Configuración de NextAuth
-│   ├── utils.ts           ← Utilidades generales (cn, formatCurrency, etc.)
-│   └── validations/       ← Schemas de Zod por módulo
-├── types/
-│   └── index.ts           ← Tipos TypeScript compartidos
-└── hooks/
-    └── ...                ← Custom hooks (useDebounce, etc.)
+│   ├── auth.ts                     ← Configuración de NextAuth
+│   ├── prisma.ts                   ← Singleton de PrismaClient
+│   ├── utils.ts                    ← Utilidades (cn, formatCurrency)
+│   └── validations/                ← Schemas de Zod (categoria.ts, producto.ts, proveedor.ts, sesion-caja.ts)
+└── types/
+    └── next-auth.d.ts              ← Tipos de sesión extendidos
 ```
 
 ## Decisiones Arquitectónicas
@@ -82,6 +99,19 @@ src/
 - Nombres de archivos en kebab-case
 - Componentes en PascalCase
 - Variables y funciones en camelCase
+
+## Estado Actual de Desarrollo
+
+**Módulos Desarrollados o en Progreso Avanzado:**
+- **Autenticación:** Sistema de login configurado con NextAuth, middleware y protección de rutas.
+- **Categorías:** CRUD de categorías de productos subido (`categoria-tab.tsx`, `categoria-form.tsx`), API REST y schemas Zod.
+- **Productos:** CRUD de productos, incluyendo formulario, tabla de datos y toda la API REST respectiva.
+- **Proveedores:** CRUD avanzado implementado con formularios (`proveedor-form.tsx`), tabla de datos (`proveedores-columns.tsx`), schemas de validación de Zod, y API REST (`/api/proveedores`).
+- **Caja (Sesión de Caja):** Flujo de apertura de caja funcional, con formulario (`abrir-caja-form.tsx`), componente de resumen (`resumen-caja.tsx`), API REST especializada (`/api/sesion-caja`) y schemas asociados.
+- **Layout y UI:** Sidebar, Header modularizados y stack inicial de componentes base listos en `components/ui/`.
+
+**Módulos Pendientes (Estructura base de páginas creada, lógica pendiente):**
+- Clientes, Punto de Venta (POS), Ventas, Compras, Inventario, Reportes, Dashboard (KPIs), Configuración de Usuarios.
 
 ## Tablas de la Base de Datos (13 tablas)
 tipoUsuario, Usuario, categoriaProducto, Producto, Proveedor, Compra, detalleCompra, Cliente, tipoPago, sesionCaja, Venta, detalleVenta, movimientoInventario
