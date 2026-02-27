@@ -97,30 +97,35 @@ NEXTAUTH_URL="http://localhost:3000"
 
 ## Estructura del proyecto
 
-```
+```text
 src/
 ├── app/
 │   ├── (auth)/               ← Páginas de login (sin sidebar)
 │   │   └── login/page.tsx
 │   ├── (dashboard)/          ← Todas las páginas protegidas
 │   │   ├── layout.tsx        ← Sidebar + Header compartido
-│   │   ├── dashboard/        ← KPIs
-│   │   ├── pos/              ← Punto de venta
-│   │   ├── ventas/           ← Historial de ventas
-│   │   ├── productos/        ← CRUD productos
+│   │   ├── caja/             ← Apertura/cierre de caja
+│   │   ├── categoria/        ← Gestión de categorías
 │   │   ├── clientes/         ← CRUD clientes
+│   │   ├── compras/          ← Registro de compras
+│   │   ├── configuracion/    ← Ajustes (roles, usuarios)
+│   │   ├── dashboard/        ← KPIs
 │   │   ├── inventario/       ← Movimientos de stock
+│   │   ├── pos/              ← Punto de venta
+│   │   ├── productos/        ← CRUD productos
 │   │   ├── proveedores/      ← CRUD proveedores
-│   │   ├── compras/          ← Compras a proveedores
 │   │   ├── reportes/         ← Gráficos y reportes
-│   │   └── configuracion/    ← Usuarios, categorías, tipos de pago
+│   │   └── ventas/           ← Historial de ventas
 │   └── api/                  ← API Routes (Next.js)
 ├── components/
-│   ├── ui/                   ← Componentes shadcn (NO editar)
+│   ├── forms/                ← Formularios interactivos
 │   ├── layout/               ← Sidebar y Header
-│   ├── forms/                ← Formularios reutilizables
+│   ├── modules/              ← Componentes modulares complejos
+│   ├── pos/                  ← Componentes del punto de venta
 │   ├── tables/               ← Columnas y DataTables por módulo
-│   └── pos/                  ← Componentes del punto de venta
+│   └── ui/                   ← Componentes shadcn (NO editar)
+├── generated/
+│   └── prisma/               ← Tipos y cliente de Prisma generados
 ├── lib/
 │   ├── prisma.ts             ← Singleton de PrismaClient
 │   ├── auth.ts               ← Configuración de NextAuth
