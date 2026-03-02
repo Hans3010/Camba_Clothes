@@ -17,7 +17,6 @@ datasource db {
 enum Rol {
   ADMIN
   VENDEDOR
-  JUAN
 }
 
 enum EstadoGeneral {
@@ -47,6 +46,14 @@ enum TipoMovimiento {
   ENTRADA
   SALIDA
   AJUSTE
+}
+
+enum OrigenMovimiento {
+  STOCK_INICIAL
+  COMPRA
+  VENTA
+  AJUSTE_MANUAL
+  DEVOLUCION
 }
 
 enum MetodoPago {
@@ -83,9 +90,10 @@ model Usuario {
 
 /// Categorías de producto (Camisa, Pantalón, Vestido, etc.)
 model categoriaProducto {
-  id              Int       @id @default(autoincrement())
+  id              Int           @id @default(autoincrement())
   nombreCategoria String
   descripcion     String?
+  estado          EstadoGeneral @default(ACTIVO)
   productos       Producto[]
 }
 
@@ -114,23 +122,25 @@ model Producto {
 
 /// Proveedores de mercadería
 model Proveedor {
-  id            Int       @id @default(autoincrement())
+  id            Int           @id @default(autoincrement())
   nombreEmpresa String
   representante String?
   telefono      String
   correo        String?
   ubicacion     String?
+  estado        EstadoGeneral @default(ACTIVO)
   compras       Compra[]
 }
 
 /// Clientes de la boutique
 model Cliente {
-  id         Int     @id @default(autoincrement())
+  id         Int           @id @default(autoincrement())
   nombre     String
   apPaterno  String
   apMaterno  String?
   telefono   String
   correo     String?
+  estado     EstadoGeneral @default(ACTIVO)
   ventas     Venta[]
 }
 
@@ -189,18 +199,20 @@ model detalleVenta {
 
 /// Compra de mercadería a un proveedor
 model Compra {
-  id              Int        @id @default(autoincrement())
+  id              Int           @id @default(autoincrement())
   idUsuario       Int
-  usuario         Usuario    @relation(fields: [idUsuario], references: [id])
+  usuario         Usuario       @relation(fields: [idUsuario], references: [id])
   idProveedor     Int
-  proveedor       Proveedor  @relation(fields: [idProveedor], references: [id])
-  fecha           DateTime   @default(now())
+  proveedor       Proveedor     @relation(fields: [idProveedor], references: [id])
+  fecha           DateTime      @default(now())
   numeroDocumento String?
   tipoDocumento   String?
-  subtotal        Decimal    @db.Decimal(10, 2)
-  descuento       Decimal    @db.Decimal(10, 2) @default(0)
-  total           Decimal    @db.Decimal(10, 2)
+  subtotal        Decimal       @db.Decimal(10, 2)
+  descuento       Decimal       @db.Decimal(10, 2) @default(0)
+  total           Decimal       @db.Decimal(10, 2)
+  estado          EstadoGeneral        @default(ACTIVO)
   detalles        detalleCompra[]
+  movimientos     movimientoInventario[]
 }
 
 /// Líneas de detalle de cada compra
@@ -217,14 +229,17 @@ model detalleCompra {
 
 /// Log de auditoría de todos los movimientos de inventario
 model movimientoInventario {
-  id         Int            @id @default(autoincrement())
-  idProducto Int
-  producto   Producto       @relation(fields: [idProducto], references: [id])
-  idUsuario  Int
-  usuario    Usuario        @relation(fields: [idUsuario], references: [id])
-  fecha      DateTime       @default(now())
-  tipo       TipoMovimiento
+  id          Int               @id @default(autoincrement())
+  idProducto  Int
+  producto    Producto          @relation(fields: [idProducto], references: [id])
+  idUsuario   Int
+  usuario     Usuario           @relation(fields: [idUsuario], references: [id])
+  idCompra    Int?
+  compra      Compra?           @relation(fields: [idCompra], references: [id])
+  fecha       DateTime          @default(now())
+  tipo        TipoMovimiento
+  origen      OrigenMovimiento
   /// Positivo = entradas, negativo = salidas
-  cantidad   Int
+  cantidad    Int
   descripcion String
 }
