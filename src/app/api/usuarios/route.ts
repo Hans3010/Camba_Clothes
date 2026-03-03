@@ -15,9 +15,9 @@ export async function GET() {
       include: { tipoUsuario: true },
       orderBy: { id: 'desc' },
     })
-    const safe = usuarios.map(({ password, ...rest }) => rest)
+    const safe = usuarios.map(({ password: _password, ...rest }) => rest)
     return NextResponse.json(safe)
-  } catch (error) {
+  } catch {
     return NextResponse.json({ error: 'Error al obtener usuarios' }, { status: 500 })
   }
 }
@@ -49,9 +49,9 @@ export async function POST(req: NextRequest) {
       },
     })
 
-    const { password, ...safe } = usuario
+    const { password: _password, ...safe } = usuario
     return NextResponse.json(safe, { status: 201 })
-  } catch (error) {
+  } catch {
     return NextResponse.json({ error: 'Error al crear usuario' }, { status: 500 })
   }
 }

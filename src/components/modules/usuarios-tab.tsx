@@ -4,7 +4,12 @@ import { useEffect, useState } from "react";
 import { UsuarioForm } from "@/components/forms/usuario-form";
 import { DataTable } from "@/components/ui/data-table";
 import { columns, UsuarioColumn } from "@/components/tables/usuarios-columns";
-import { Separator } from "@/components/ui/separator";
+interface UsuarioRaw {
+  id: number
+  usuario: string
+  tipoUsuario?: { rol: string }
+  estado: string
+}
 
 export const UsuariosTab = () => {
   const [data, setData] = useState<UsuarioColumn[]>([]);
@@ -14,8 +19,8 @@ export const UsuariosTab = () => {
     try {
       const res = await fetch("/api/usuarios");
       const usuarios = await res.json();
-      
-      const formatted = usuarios.map((u: any) => ({
+
+      const formatted = usuarios.map((u: UsuarioRaw) => ({
         id: u.id,
         usuario: u.usuario,
         rol: u.tipoUsuario?.rol || "N/A",

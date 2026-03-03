@@ -8,7 +8,7 @@ export async function GET() {
       orderBy: { id: 'asc' },
     });
     return NextResponse.json(categorias);
-  } catch (error) {
+  } catch {
     return NextResponse.json({ error: 'Error' }, { status: 500 });
   }
 }
@@ -21,7 +21,7 @@ export async function POST(req: NextRequest) {
       data: validated,
     });
     return NextResponse.json(categoria, { status: 201 });
-  } catch (error) {
+  } catch {
     return NextResponse.json(
       { error: 'Error al crear categoría' },
       { status: 500 },

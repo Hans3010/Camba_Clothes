@@ -4,7 +4,7 @@ import { categoriaSchema } from '@/lib/validations/categoria';
 
 export async function PUT(
   req: NextRequest,
-  { params }: { params: { id: string } },
+  { params }: { params: Promise<{ id: string }> },
 ) {
   try {
     const { id } = await params;
@@ -15,7 +15,7 @@ export async function PUT(
       data: validated,
     });
     return NextResponse.json(categoria);
-  } catch (error) {
+  } catch {
     return NextResponse.json({ error: 'Error al actualizar' }, { status: 500 });
   }
 }

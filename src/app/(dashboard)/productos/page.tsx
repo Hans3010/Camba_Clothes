@@ -2,8 +2,15 @@
 
 import { useEffect, useState } from "react";
 
+interface Producto {
+  id: number
+  nombreProducto: string
+  precioVenta: number | string
+  categoria?: { nombreCategoria: string } | null
+}
+
 export default function ProductosPage() {
-  const [productos, setProductos] = useState<any[]>([]); // 👈 inicializar como array
+  const [productos, setProductos] = useState<Producto[]>([]);
 
   useEffect(() => {
     fetch("/api/productos")

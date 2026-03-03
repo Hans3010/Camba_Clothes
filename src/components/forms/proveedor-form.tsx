@@ -19,7 +19,7 @@ import { Button } from "@/components/ui/button";
 import { proveedorSchema, ProveedorFormValues } from "@/lib/validations/proveedor";
 
 interface ProveedorFormProps {
-  initialData?: any; // Para cuando toque editar
+  initialData?: ProveedorFormValues & { id: number };
 }
 
 export const ProveedorForm = ({ initialData }: ProveedorFormProps) => {
@@ -56,7 +56,7 @@ export const ProveedorForm = ({ initialData }: ProveedorFormProps) => {
       toast.success(initialData ? "Proveedor actualizado" : "Proveedor creado");
       router.refresh();
       router.push("/proveedores");
-    } catch (error) {
+    } catch {
       toast.error("Algo salió mal");
     } finally {
       setLoading(false);

@@ -1,26 +1,28 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 
-export async function GET(_req: Request, { params }: { params: { id: string } }) {
+export async function GET(_req: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
+    const { id } = await params
     const producto = await prisma.producto.findUnique({
-      where: { id: Number(params.id) },
+      where: { id: Number(id) },
       include: { categoria: true }, // 👈 relación correcta
     });
     if (!producto) {
       return NextResponse.json({ error: "No encontrado" }, { status: 404 });
     }
     return NextResponse.json(producto);
-  } catch (error) {
+  } catch {
     return NextResponse.json({ error: "Error al obtener producto" }, { status: 500 });
   }
 }
 
-export async function PUT(req: Request, { params }: { params: { id: string } }) {
+export async function PUT(req: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
+    const { id } = await params
     const body = await req.json();
     const actualizado = await prisma.producto.update({
-      where: { id: Number(params.id) },
+      where: { id: Number(id) },
       data: {
         idCategoriaProducto: body.idCategoriaProducto,
         nombreProducto: body.nombreProducto,
@@ -37,18 +39,19 @@ export async function PUT(req: Request, { params }: { params: { id: string } }) 
       },
     });
     return NextResponse.json(actualizado);
-  } catch (error) {
+  } catch {
     return NextResponse.json({ error: "Error al actualizar producto" }, { status: 500 });
   }
 }
 
-export async function DELETE(_req: Request, { params }: { params: { id: string } }) {
+export async function DELETE(_req: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
+    const { id } = await params
     await prisma.producto.delete({
-      where: { id: Number(params.id) },
+      where: { id: Number(id) },
     });
     return NextResponse.json({ message: "Producto eliminado" });
-  } catch (error) {
+  } catch {
     return NextResponse.json({ error: "Error al eliminar producto" }, { status: 500 });
   }
 }

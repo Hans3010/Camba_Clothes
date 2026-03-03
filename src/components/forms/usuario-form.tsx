@@ -70,8 +70,8 @@ export const UsuarioForm = ({ onSuccess }: UsuarioFormProps) => {
       if (onSuccess) {
         onSuccess(); // Refresca la tabla automáticamente
       }
-    } catch (error: any) {
-      toast.error(error.message);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Error al crear el usuario");
     } finally {
       setLoading(false);
     }

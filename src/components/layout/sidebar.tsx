@@ -21,8 +21,7 @@ import { cn } from "@/lib/utils"
 const navItems = [
   { href: "/dashboard",     label: "Dashboard",     icon: LayoutDashboard },
   { href: "/caja",          label: "Caja",           icon: Vault },
-  { href: "/pos",           label: "POS",            icon: ShoppingCart },
-  { href: "/ventas",        label: "Ventas",         icon: Receipt },
+  { href: "/pos",           label: "Ventas",         icon: ShoppingCart },
   { href: "/categoria",        label: "Categoria",         icon: Receipt },
   { href: "/productos",     label: "Productos",      icon: Package },
   { href: "/clientes",      label: "Clientes",       icon: Users },
