@@ -18,7 +18,7 @@ export const UsuariosTab = () => {
       const formatted = usuarios.map((u: any) => ({
         id: u.id,
         usuario: u.usuario,
-        rol: u.tipoUsuario?.nombre || "N/A",
+        rol: u.tipoUsuario?.rol || "N/A",
         estado: u.estado,
       }));
       setData(formatted);

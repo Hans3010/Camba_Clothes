@@ -1,9 +1,3 @@
-/*
-  Warnings:
-
-  - Added the required column `origen` to the `movimientoInventario` table without a default value. This is not possible if the table is not empty.
-
-*/
 -- CreateEnum
 CREATE TYPE "OrigenMovimiento" AS ENUM ('STOCK_INICIAL', 'COMPRA', 'VENTA', 'AJUSTE_MANUAL', 'DEVOLUCION');
 
@@ -21,7 +15,7 @@ ALTER TABLE "categoriaProducto" ADD COLUMN     "estado" "EstadoGeneral" NOT NULL
 
 -- AlterTable
 ALTER TABLE "movimientoInventario" ADD COLUMN     "idCompra" INTEGER,
-ADD COLUMN     "origen" "OrigenMovimiento" NOT NULL;
+ADD COLUMN     "origen" "OrigenMovimiento" NOT NULL DEFAULT 'AJUSTE_MANUAL';
 
 -- AddForeignKey
 ALTER TABLE "movimientoInventario" ADD CONSTRAINT "movimientoInventario_idCompra_fkey" FOREIGN KEY ("idCompra") REFERENCES "Compra"("id") ON DELETE SET NULL ON UPDATE CASCADE;

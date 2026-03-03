@@ -2,7 +2,7 @@
 
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { toast } from "sonner";
 
 import {
@@ -30,14 +30,21 @@ interface UsuarioFormProps {
 
 export const UsuarioForm = ({ onSuccess }: UsuarioFormProps) => {
   const [loading, setLoading] = useState(false);
+  const [tiposUsuario, setTiposUsuario] = useState<{ id: number; rol: string }[]>([]);
 
-  // El tipado <UsuarioCreateValues> aquí es lo que quita el error en 'control'
+  useEffect(() => {
+    fetch("/api/tipo-usuarios")
+      .then((r) => r.json())
+      .then((data) => setTiposUsuario(Array.isArray(data) ? data : []))
+      .catch(() => {});
+  }, []);
+
   const form = useForm<UsuarioCreateValues>({
     resolver: zodResolver(usuarioCreateSchema),
     defaultValues: {
       usuario: "",
       password: "",
-      idTipoUsuario: 2, // 2 es Vendedor por defecto
+      idTipoUsuario: undefined,
       estado: "ACTIVO",
     },
   });
@@ -72,7 +79,7 @@ export const UsuarioForm = ({ onSuccess }: UsuarioFormProps) => {
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 p-4 border rounded-xl bg-white shadow-sm">
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 p-4 border rounded-xl bg-card shadow-sm">
         <FormField
           control={form.control}
           name="usuario"
@@ -113,19 +120,22 @@ export const UsuarioForm = ({ onSuccess }: UsuarioFormProps) => {
             render={({ field }) => (
               <FormItem>
                 <FormLabel className="font-semibold">Rol de Usuario</FormLabel>
-                <Select 
-                  disabled={loading} 
-                  onValueChange={(value) => field.onChange(Number(value))} 
-                  value={field.value.toString()}
+                <Select
+                  disabled={loading}
+                  onValueChange={(value) => field.onChange(Number(value))}
+                  value={field.value ? field.value.toString() : undefined}
                 >
                   <FormControl>
                     <SelectTrigger>
-                      <SelectValue placeholder="Seleccionar" />
+                      <SelectValue placeholder="Seleccionar rol" />
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
-                    <SelectItem value="1">Administrador</SelectItem>
-                    <SelectItem value="2">Vendedor</SelectItem>
+                    {tiposUsuario.map((t) => (
+                      <SelectItem key={t.id} value={t.id.toString()}>
+                        {t.rol === "ADMIN" ? "Administrador" : "Vendedor"}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
                 <FormMessage />

@@ -238,7 +238,7 @@ model movimientoInventario {
   compra      Compra?           @relation(fields: [idCompra], references: [id])
   fecha       DateTime          @default(now())
   tipo        TipoMovimiento
-  origen      OrigenMovimiento
+  origen      OrigenMovimiento  @default(AJUSTE_MANUAL)
   /// Positivo = entradas, negativo = salidas
   cantidad    Int
   descripcion String

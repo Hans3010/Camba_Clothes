@@ -21,7 +21,7 @@ export const columns: ColumnDef<UsuarioColumn>[] = [
     cell: ({ row }) => {
       const rol = row.getValue("rol") as string;
       return (
-        <Badge variant={rol === "ADMINISTRADOR" ? "default" : "secondary"}>
+        <Badge variant={rol === "ADMIN" ? "default" : "secondary"}>
           {rol}
         </Badge>
       );
