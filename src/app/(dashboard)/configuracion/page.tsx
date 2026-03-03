@@ -1,22 +1,22 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Settings } from "lucide-react"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { UsuariosTab } from "@/components/modules/usuarios-tab";
 
 export default function ConfiguracionPage() {
   return (
-    <div className="space-y-4">
-      <h1 className="text-2xl font-bold">Configuración</h1>
-      <Card className="max-w-md">
-        <CardHeader className="flex flex-row items-center gap-3 pb-2">
-          <Settings className="h-5 w-5 text-muted-foreground" />
-          <CardTitle className="text-base">Módulo Configuración — En desarrollo</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <p className="text-sm text-muted-foreground">
-            Gestión de usuarios, categorías de producto y tipos de pago.
-            Solo accesible para ADMIN.
-          </p>
-        </CardContent>
-      </Card>
+    <div className="p-8">
+      <Tabs defaultValue="usuarios">
+        <TabsList className="grid w-full grid-cols-3 max-w-[400px]">
+          <TabsTrigger value="usuarios">Usuarios</TabsTrigger>
+          <TabsTrigger value="pagos">Pagos</TabsTrigger>
+          <TabsTrigger value="categorias">Categorías</TabsTrigger>
+        </TabsList>
+        <TabsContent value="usuarios" className="mt-6">
+          <UsuariosTab />
+        </TabsContent>
+        {/* Placeholders para Luis y Jhonnatan */}
+        <TabsContent value="pagos">Módulo de Luis Merma</TabsContent>
+        <TabsContent value="categorias">Módulo de Jhonnatan Mamani</TabsContent>
+      </Tabs>
     </div>
-  )
+  );
 }
