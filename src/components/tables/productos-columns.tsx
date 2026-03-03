@@ -1,29 +1,39 @@
-"use client";
-import { ColumnDef } from "@tanstack/react-table";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+"use client"
 
-interface Producto {
-  id: number;
-  nombreProducto: string;
-  marca: string;
-  talla: string;
-  color: string;
-  precioVenta: number;
-  costo: number;
-  margen: number;
-  stock: number;
-  stockMinimo: number;
-  estado: "ACTIVO" | "INACTIVO";
-  categoriaProducto: {
-    nombreCategoria: string;
-  };
+import { ColumnDef } from "@tanstack/react-table"
+import { MoreHorizontal } from "lucide-react"
+import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
+
+export interface ProductoRow {
+  id: number
+  nombreProducto: string
+  marca: string
+  talla: string
+  color: string
+  precioVenta: number
+  costo: number
+  margen: number
+  stock: number
+  stockMinimo: number
+  estado: "ACTIVO" | "INACTIVO"
+  categoria: { nombreCategoria: string }
 }
 
-export const productosColumns: ColumnDef<Producto>[] = [
+export const createProductosColumns = (
+  onToggleEstado: (id: number, nuevoEstado: "ACTIVO" | "INACTIVO") => void
+): ColumnDef<ProductoRow>[] => [
   {
     header: "Categoría",
-    accessorKey: "categoriaProducto.nombreCategoria",
+    accessorFn: (row) => row.categoria?.nombreCategoria ?? "—",
+    id: "categoria",
   },
   {
     header: "Producto",
@@ -44,76 +54,73 @@ export const productosColumns: ColumnDef<Producto>[] = [
   {
     header: "Precio",
     accessorKey: "precioVenta",
-    cell: ({ row }) => {
-      const precio = row.original.precioVenta;
-      return <span>{`Bs. ${precio.toFixed(2)}`}</span>;
-    },
-  },
-  {
-    header: "Costo",
-    accessorKey: "costo",
-    cell: ({ row }) => {
-      const costo = row.original.costo;
-      return <span>{`Bs. ${costo.toFixed(2)}`}</span>;
-    },
+    cell: ({ row }) => `Bs. ${Number(row.original.precioVenta).toFixed(2)}`,
   },
   {
     header: "Margen",
     accessorKey: "margen",
     cell: ({ row }) => {
-      const margen = row.original.margen;
-      let color = "text-red-600";
-      if (margen > 30) color = "text-green-600";
-      else if (margen >= 15) color = "text-yellow-600";
-
-      return <span className={color}>{`${margen}%`}</span>;
+      const margen = Number(row.original.margen)
+      const color =
+        margen > 30 ? "text-green-600" : margen >= 15 ? "text-yellow-600" : "text-red-600"
+      return <span className={color}>{margen.toFixed(1)}%</span>
     },
   },
   {
     header: "Stock",
     accessorKey: "stock",
     cell: ({ row }) => {
-      const { stock, stockMinimo } = row.original;
-      if (stock <= stockMinimo) {
-        return <Badge variant="destructive">{stock}</Badge>;
-      }
-      return <Badge variant="outline">{stock}</Badge>;
+      const { stock, stockMinimo } = row.original
+      return stock <= stockMinimo ? (
+        <Badge variant="destructive">{stock}</Badge>
+      ) : (
+        <Badge variant="outline">{stock}</Badge>
+      )
     },
   },
   {
     header: "Estado",
     accessorKey: "estado",
-    cell: ({ row }) => {
-      const estado = row.original.estado;
-      return (
-        <Badge className={estado === "ACTIVO" ? "bg-green-600" : "bg-gray-400"}>
-          {estado}
-        </Badge>
-      );
-    },
+    cell: ({ row }) => (
+      <Badge className={row.original.estado === "ACTIVO" ? "bg-green-600" : "bg-gray-400"}>
+        {row.original.estado}
+      </Badge>
+    ),
   },
   {
-    header: "Acciones",
+    id: "acciones",
+    header: "",
     cell: ({ row }) => {
+      const { id, estado } = row.original
       return (
-        <div className="flex gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => console.log("Editar", row.original.id)}
-          >
-            Editar
-          </Button>
-          <Button
-            variant="destructive"
-            size="sm"
-            onClick={() => console.log("Desactivar", row.original.id)}
-          >
-            Desactivar
-          </Button>
-        </div>
-      );
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+              <MoreHorizontal className="h-4 w-4" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            {estado === "ACTIVO" ? (
+              <>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
+                  className="text-red-600 focus:text-red-600"
+                  onClick={() => onToggleEstado(id, "INACTIVO")}
+                >
+                  Desactivar producto
+                </DropdownMenuItem>
+              </>
+            ) : (
+              <DropdownMenuItem
+                className="text-green-600 focus:text-green-600"
+                onClick={() => onToggleEstado(id, "ACTIVO")}
+              >
+                Activar producto
+              </DropdownMenuItem>
+            )}
+          </DropdownMenuContent>
+        </DropdownMenu>
+      )
     },
   },
-];
-
+]

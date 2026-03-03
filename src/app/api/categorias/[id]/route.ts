@@ -19,3 +19,21 @@ export async function PUT(
     return NextResponse.json({ error: 'Error al actualizar' }, { status: 500 });
   }
 }
+
+export async function PATCH(
+  req: NextRequest,
+  { params }: { params: Promise<{ id: string }> },
+) {
+  try {
+    const { id } = await params;
+    const body = await req.json().catch(() => ({}));
+    const estado: 'ACTIVO' | 'INACTIVO' = body.estado ?? 'INACTIVO';
+    const categoria = await prisma.categoriaProducto.update({
+      where: { id: Number(id) },
+      data: { estado },
+    });
+    return NextResponse.json(categoria);
+  } catch {
+    return NextResponse.json({ error: 'Error al cambiar estado' }, { status: 500 });
+  }
+}

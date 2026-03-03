@@ -44,6 +44,21 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
   }
 }
 
+export async function PATCH(req: Request, { params }: { params: Promise<{ id: string }> }) {
+  try {
+    const { id } = await params
+    const body = await req.json().catch(() => ({}))
+    const estado: "ACTIVO" | "INACTIVO" = body.estado ?? "INACTIVO"
+    const producto = await prisma.producto.update({
+      where: { id: Number(id) },
+      data: { estado },
+    })
+    return NextResponse.json(producto)
+  } catch {
+    return NextResponse.json({ error: "Error al cambiar estado" }, { status: 500 })
+  }
+}
+
 export async function DELETE(_req: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await params
