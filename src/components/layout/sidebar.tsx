@@ -29,7 +29,7 @@ const navItems = [
   { href: "/proveedores",   label: "Proveedores",    icon: Truck },
   { href: "/compras",       label: "Compras",        icon: ShoppingBag },
   { href: "/reportes",      label: "Reportes",       icon: BarChart3 },
-  { href: "/configuracion", label: "Configuración",  icon: Settings },
+  { href: "/configuracion", label: "Usuarios",  icon: Settings },
 ]
 
 function NavContent() {
