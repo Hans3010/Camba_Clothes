@@ -102,16 +102,30 @@ src/
 
 ## Estado Actual de Desarrollo
 
-**Módulos Desarrollados o en Progreso Avanzado:**
-- **Autenticación:** Sistema de login configurado con NextAuth, middleware y protección de rutas.
-- **Categorías:** CRUD de categorías de productos subido (`categoria-tab.tsx`, `categoria-form.tsx`), API REST y schemas Zod.
-- **Productos:** CRUD de productos, incluyendo formulario, tabla de datos y toda la API REST respectiva.
-- **Proveedores:** CRUD avanzado implementado con formularios (`proveedor-form.tsx`), tabla de datos (`proveedores-columns.tsx`), schemas de validación de Zod, y API REST (`/api/proveedores`).
-- **Caja (Sesión de Caja):** Flujo de apertura de caja funcional, con formulario (`abrir-caja-form.tsx`), componente de resumen (`resumen-caja.tsx`), API REST especializada (`/api/sesion-caja`) y schemas asociados.
-- **Layout y UI:** Sidebar, Header modularizados y stack inicial de componentes base listos en `components/ui/`.
+**Módulos Completados:**
+- **Autenticación:** Login con NextAuth, middleware y protección de rutas. Roles ADMIN y VENDEDOR.
+- **Usuarios:** CRUD completo en `/configuracion`. API REST (`/api/usuarios`) con auth y restricción ADMIN. Formulario con validación Zod.
+- **Categorías:** CRUD completo (`categoria-tab.tsx`, `categoria-form.tsx`), API REST (`/api/categorias`) y schemas Zod.
+- **Proveedores:** CRUD completo con soft delete, formulario (`proveedor-form.tsx`), tabla (`proveedores-columns.tsx`) y API REST (`/api/proveedores`).
+- **Productos:** CRUD completo con soft delete, búsqueda/filtrado, cálculo de margen y API REST (`/api/productos`).
+- **Caja (Sesión de Caja):** Apertura/cierre funcional, formulario (`abrir-caja-form.tsx`), resumen (`resumen-caja.tsx`) y API REST (`/api/sesion-caja`).
+- **POS (Punto de Venta):** UI completa con búsqueda de productos (debounce 300ms), carrito interactivo, checkout dialog con búsqueda y creación rápida de clientes, selector de tipo de pago y nota de venta imprimible. API REST (`/api/ventas`, `/api/pos/productos`, `/api/tipos-pago`).
+- **Movimientos de Inventario:** Tabla de movimientos con lectura desde `/api/inventario`. Log de auditoría automático en cada venta.
+- **Layout y UI:** Sidebar con secciones agrupadas, Header y stack de componentes shadcn/ui.
 
-**Módulos Pendientes (Estructura base de páginas creada, lógica pendiente):**
-- Clientes, Punto de Venta (POS), Ventas, Compras, Inventario, Reportes, Dashboard (KPIs), Configuración de Usuarios.
+**Módulos con API lista pero UI pendiente:**
+- **Clientes:** API REST completa (`/api/clientes`, GET buscable + POST). Página `clientes/page.tsx` es placeholder.
+- **Ventas (historial):** API REST (`/api/ventas`, GET + POST con transacción atómica). Página `ventas/page.tsx` es placeholder.
+
+**Módulos Pendientes:**
+- Compras (registro de compras a proveedores, actualizar stock)
+- Dashboard (KPIs: ventas totales, productos más vendidos, stock crítico, margen promedio)
+- Reportes (ventas por período, inventario, rentabilidad por producto)
+
+**Notas de arquitectura vigentes:**
+- `movimientoInventario.origen` es requerido — usar `"VENTA"`, `"COMPRA"`, `"AJUSTE_MANUAL"`, `"STOCK_INICIAL"` o `"DEVOLUCION"` según el contexto
+- Soft delete implementado en: `Producto`, `categoriaProducto`, `Proveedor`, `Cliente`, `Compra` (campo `estado`)
+- `/api/usuarios` y derivados requieren rol ADMIN (verificado con `getServerSession`)
 
 ## Tablas de la Base de Datos (13 tablas)
 tipoUsuario, Usuario, categoriaProducto, Producto, Proveedor, Compra, detalleCompra, Cliente, tipoPago, sesionCaja, Venta, detalleVenta, movimientoInventario

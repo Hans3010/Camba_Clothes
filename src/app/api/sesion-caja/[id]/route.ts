@@ -43,7 +43,7 @@ export async function PUT(
     return NextResponse.json({ error: "La sesión ya está cerrada" }, { status: 409 })
   }
 
-  const montoFinal = sesionCaja.ventas.reduce(
+  const montoFinal = Number(sesionCaja.montoInicial) + sesionCaja.ventas.reduce(
     (sum, venta) => sum + Number(venta.total),
     0
   )

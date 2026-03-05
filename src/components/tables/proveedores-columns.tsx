@@ -1,6 +1,8 @@
 "use client";
 
 import { ColumnDef } from "@tanstack/react-table";
+import { Button } from "@/components/ui/button";
+import { Edit } from "lucide-react";
 
 export type ProveedorColumn = {
   id: number;
@@ -10,21 +12,26 @@ export type ProveedorColumn = {
   correo: string;
 };
 
-export const columns: ColumnDef<ProveedorColumn>[] = [
+export const columns = (onEdit: (id: number) => void): ColumnDef<ProveedorColumn>[] => [
   {
-    accessorKey: "nombreEmpresa",
+    accessorKey: "nombreEmpresa", // DEBE coincidir con el esquema
     header: "Empresa",
   },
   {
-    accessorKey: "representante",
-    header: "Representante",
+    accessorKey: "representante", // DEBE coincidir con el esquema
+    header: "Contacto",
   },
   {
     accessorKey: "telefono",
     header: "Teléfono",
   },
   {
-    accessorKey: "correo",
-    header: "Email",
+    id: "actions",
+    header: "Acciones",
+    cell: ({ row }) => (
+      <Button variant="ghost" size="icon" onClick={() => onEdit(row.original.id)}>
+        <Edit className="h-4 w-4" />
+      </Button>
+    ),
   },
 ];

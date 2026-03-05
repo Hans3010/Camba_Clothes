@@ -121,6 +121,7 @@ export async function POST(req: NextRequest) {
           idProducto: item.idProducto,
           idUsuario: session.user.id,
           tipo: "SALIDA",
+          origen: "VENTA",
           cantidad: -item.cantidad,
           descripcion: `Venta #${nuevaVenta.id}`,
         },

@@ -7,8 +7,9 @@ import {
   ShoppingCart,
   Receipt,
   Package,
+  Tag,
   Users,
-  Warehouse,
+  ArrowUpDown,
   Truck,
   ShoppingBag,
   BarChart3,
@@ -18,41 +19,68 @@ import {
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 
-const navItems = [
-  { href: "/dashboard",     label: "Dashboard",     icon: LayoutDashboard },
-  { href: "/caja",          label: "Caja",           icon: Vault },
-  { href: "/pos",           label: "POS",            icon: ShoppingCart },
-  { href: "/ventas",        label: "Ventas",         icon: Receipt },
-  { href: "/categoria",        label: "Categoria",         icon: Receipt },
-  { href: "/productos",     label: "Productos",      icon: Package },
-  { href: "/clientes",      label: "Clientes",       icon: Users },
-  { href: "/inventario",    label: "Inventario",     icon: Warehouse },
-  { href: "/proveedores",   label: "Proveedores",    icon: Truck },
-  { href: "/compras",       label: "Compras",        icon: ShoppingBag },
-  { href: "/reportes",      label: "Reportes",       icon: BarChart3 },
-  { href: "/configuracion", label: "Configuración",  icon: Settings },
+type NavLink = { kind: "link"; href: string; label: string; icon: React.ElementType }
+type NavSection = { kind: "section"; label: string }
+type NavEntry = NavLink | NavSection
+
+const navEntries: NavEntry[] = [
+  { kind: "link",    href: "/dashboard",     label: "Dashboard",        icon: LayoutDashboard },
+
+  { kind: "section", label: "Operaciones" },
+  { kind: "link",    href: "/pos",           label: "Punto de Venta",   icon: ShoppingCart },
+  { kind: "link",    href: "/caja",          label: "Caja",             icon: Vault },
+
+  { kind: "section", label: "Registros" },
+  { kind: "link",    href: "/ventas",        label: "Historial",        icon: Receipt },
+
+  { kind: "section", label: "Catálogo" },
+  { kind: "link",    href: "/productos",     label: "Productos",        icon: Package },
+  { kind: "link",    href: "/categoria",     label: "Categorías",       icon: Tag },
+  { kind: "link",    href: "/clientes",      label: "Clientes",         icon: Users },
+
+  { kind: "section", label: "Abastecimiento" },
+  { kind: "link",    href: "/proveedores",   label: "Proveedores",      icon: Truck },
+  { kind: "link",    href: "/compras",       label: "Compras",          icon: ShoppingBag },
+
+  { kind: "section", label: "Control" },
+  { kind: "link",    href: "/inventario",    label: "Movimientos",      icon: ArrowUpDown },
+  { kind: "link",    href: "/reportes",      label: "Reportes",         icon: BarChart3 },
+
+  { kind: "section", label: "Sistema" },
+  { kind: "link",    href: "/configuracion", label: "Configuración",    icon: Settings },
 ]
 
 function NavContent() {
   const pathname = usePathname()
 
   return (
-    <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
-      {navItems.map((item) => {
-        const isActive = pathname === item.href || pathname.startsWith(item.href + "/")
+    <nav className="flex-1 px-3 py-4 overflow-y-auto">
+      {navEntries.map((entry, i) => {
+        if (entry.kind === "section") {
+          return (
+            <p
+              key={i}
+              className="px-3 pt-4 pb-1 text-xs font-semibold uppercase tracking-wider text-muted-foreground/50 first:pt-0"
+            >
+              {entry.label}
+            </p>
+          )
+        }
+
+        const isActive = pathname === entry.href || pathname.startsWith(entry.href + "/")
         return (
           <Link
-            key={item.href}
-            href={item.href}
+            key={entry.href}
+            href={entry.href}
             className={cn(
-              "flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors",
+              "flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors mb-0.5",
               isActive
                 ? "bg-primary text-primary-foreground"
                 : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
             )}
           >
-            <item.icon className="h-4 w-4 shrink-0" />
-            {item.label}
+            <entry.icon className="h-4 w-4 shrink-0" />
+            {entry.label}
           </Link>
         )
       })}

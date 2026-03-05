@@ -2,62 +2,75 @@
 
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
-
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { proveedorSchema, ProveedorFormValues } from "@/lib/validations/proveedor";
 
 interface ProveedorFormProps {
-  initialData?: any; // Para cuando toque editar
+  initialId?: number | null;
+  onSuccess?: () => void;
 }
 
-export const ProveedorForm = ({ initialData }: ProveedorFormProps) => {
-  const router = useRouter();
+export const ProveedorForm = ({ initialId, onSuccess }: ProveedorFormProps) => {
   const [loading, setLoading] = useState(false);
 
   const form = useForm<ProveedorFormValues>({
     resolver: zodResolver(proveedorSchema),
-    defaultValues: initialData || {
-      nombreEmpresa: "",
-      representante: "",
-      telefono: "",
+    defaultValues: { 
+      nombreEmpresa: "", 
+      representante: "", 
+      telefono: "", 
       correo: "",
-      ubicacion: "",
+      ubicacion: "" 
     },
   });
+
+  useEffect(() => {
+    if (initialId) {
+      const fetchProveedor = async () => {
+        try {
+          const res = await fetch(`/api/proveedores/${initialId}`);
+          const data = await res.json();
+          // Sincronizamos los datos que vienen de la API con tu esquema
+          form.reset({
+            nombreEmpresa: data.nombreEmpresa || "",
+            representante: data.representante || "",
+            telefono: data.telefono || "",
+            correo: data.correo || "",
+            ubicacion: data.ubicacion || "",
+          });
+        } catch (error) {
+          toast.error("Error al cargar proveedor");
+        }
+      };
+      fetchProveedor();
+    } else {
+      form.reset({ nombreEmpresa: "", representante: "", telefono: "", correo: "", ubicacion: "" });
+    }
+  }, [initialId, form]);
 
   const onSubmit = async (values: ProveedorFormValues) => {
     try {
       setLoading(true);
-      const url = initialData 
-        ? `/api/proveedores/${initialData.id}` 
-        : "/api/proveedores";
-      
-      const method = initialData ? "PUT" : "POST";
+      const url = initialId ? `/api/proveedores/${initialId}` : "/api/proveedores";
+      const method = initialId ? "PUT" : "POST";
 
-      const response = await fetch(url, {
-        method,
+      const res = await fetch(url, {
+        method: method,
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(values),
       });
 
-      if (!response.ok) throw new Error("Error en la petición");
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Error en la operación");
 
-      toast.success(initialData ? "Proveedor actualizado" : "Proveedor creado");
-      router.refresh();
-      router.push("/proveedores");
+      toast.success(initialId ? "Actualizado correctamente" : "Registrado correctamente");
+      if (onSuccess) onSuccess();
     } catch (error) {
-      toast.error("Algo salió mal");
+      toast.error(error instanceof Error ? error.message : "Error en la operación");
     } finally {
       setLoading(false);
     }
@@ -65,43 +78,41 @@ export const ProveedorForm = ({ initialData }: ProveedorFormProps) => {
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 w-full">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <FormField
-            control={form.control}
-            name="nombreEmpresa"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Nombre de la Empresa</FormLabel>
-                <FormControl>
-                  <Input disabled={loading} placeholder="Ej: Textiles Santa Cruz" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <FormField
-            control={form.control}
-            name="representante"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Representante</FormLabel>
-                <FormControl>
-                  <Input disabled={loading} placeholder="Nombre del contacto" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 border p-4 rounded-xl shadow-sm bg-card">
+        <h3 className="font-bold text-lg">{initialId ? "Editar Proveedor" : "Nuevo Proveedor"}</h3>
+        
+        <FormField
+          control={form.control}
+          name="nombreEmpresa" // Coincide con tu esquema
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Nombre de la Empresa</FormLabel>
+              <FormControl><Input disabled={loading} {...field} /></FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={form.control}
+          name="representante" // Coincide con tu esquema
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Representante</FormLabel>
+              <FormControl><Input disabled={loading} {...field} /></FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <div className="grid grid-cols-2 gap-4">
           <FormField
             control={form.control}
             name="telefono"
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Teléfono</FormLabel>
-                <FormControl>
-                  <Input disabled={loading} placeholder="70000000" {...field} />
-                </FormControl>
+                <FormControl><Input disabled={loading} {...field} /></FormControl>
                 <FormMessage />
               </FormItem>
             )}
@@ -112,29 +123,27 @@ export const ProveedorForm = ({ initialData }: ProveedorFormProps) => {
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Correo (Opcional)</FormLabel>
-                <FormControl>
-                  <Input disabled={loading} type="email" placeholder="proveedor@mail.com" {...field} />
-                </FormControl>
+                <FormControl><Input disabled={loading} type="email" {...field} /></FormControl>
                 <FormMessage />
               </FormItem>
             )}
           />
         </div>
+
         <FormField
           control={form.control}
           name="ubicacion"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Ubicación</FormLabel>
-              <FormControl>
-                <Input disabled={loading} placeholder="Dirección detallada" {...field} />
-              </FormControl>
+              <FormLabel>Ubicación / Dirección</FormLabel>
+              <FormControl><Input disabled={loading} {...field} /></FormControl>
               <FormMessage />
             </FormItem>
           )}
         />
-        <Button disabled={loading} className="ml-auto" type="submit">
-          {initialData ? "Guardar cambios" : "Registrar Proveedor"}
+
+        <Button disabled={loading} className="w-full" type="submit">
+          {initialId ? "Guardar Cambios" : "Registrar Proveedor"}
         </Button>
       </form>
     </Form>

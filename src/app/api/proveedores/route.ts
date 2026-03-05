@@ -4,7 +4,7 @@ import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { proveedorSchema } from "@/lib/validations/proveedor";
 
-export async function GET(request: NextRequest) {
+export async function GET() {
   try {
     const session = await getServerSession(authOptions);
     if (!session) {
@@ -40,6 +40,13 @@ export async function POST(request: NextRequest) {
         { error: "Datos inválidos", details: result.error.flatten() },
         { status: 400 }
       );
+    }
+
+    const existe = await prisma.proveedor.findFirst({
+      where: { nombreEmpresa: { equals: result.data.nombreEmpresa, mode: "insensitive" } },
+    })
+    if (existe) {
+      return NextResponse.json({ error: "Ya existe un proveedor con ese nombre de empresa" }, { status: 400 })
     }
 
     const newProveedor = await prisma.proveedor.create({
