@@ -1,4 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { proveedorSchema } from "@/lib/validations/proveedor";
 
@@ -29,15 +31,31 @@ export async function PUT(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const session = await getServerSession(authOptions);
+    if (!session) return NextResponse.json({ error: "No autorizado" }, { status: 401 });
+
     const { id } = await params;
+    const numId = Number(id);
     const body = await req.json();
-    
-    // Validamos con tu esquema de proveedor.ts
-    const validatedData = proveedorSchema.parse(body);
+
+    const result = proveedorSchema.safeParse(body);
+    if (!result.success) {
+      return NextResponse.json({ error: "Datos inválidos", details: result.error.flatten() }, { status: 400 });
+    }
+
+    const existe = await prisma.proveedor.findFirst({
+      where: {
+        nombreEmpresa: { equals: result.data.nombreEmpresa, mode: "insensitive" },
+        NOT: { id: numId },
+      },
+    });
+    if (existe) {
+      return NextResponse.json({ error: "Ya existe un proveedor con ese nombre de empresa" }, { status: 400 });
+    }
 
     const proveedorActualizado = await prisma.proveedor.update({
-      where: { id: Number(id) },
-      data: validatedData,
+      where: { id: numId },
+      data: result.data,
     });
 
     return NextResponse.json(proveedorActualizado);

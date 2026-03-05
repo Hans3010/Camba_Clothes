@@ -42,6 +42,13 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    const existe = await prisma.proveedor.findFirst({
+      where: { nombreEmpresa: { equals: result.data.nombreEmpresa, mode: "insensitive" } },
+    })
+    if (existe) {
+      return NextResponse.json({ error: "Ya existe un proveedor con ese nombre de empresa" }, { status: 400 })
+    }
+
     const newProveedor = await prisma.proveedor.create({
       data: {
         nombreEmpresa: result.data.nombreEmpresa,

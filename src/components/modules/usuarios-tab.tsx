@@ -1,9 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { UsuarioForm } from "@/components/forms/usuario-form";
 import { DataTable } from "@/components/ui/data-table";
-import { columns, UsuarioColumn } from "@/components/tables/usuarios-columns";
+import { createUsuariosColumns, UsuarioColumn } from "@/components/tables/usuarios-columns";
+
 interface UsuarioRaw {
   id: number
   usuario: string
@@ -13,8 +14,8 @@ interface UsuarioRaw {
 
 export const UsuariosTab = () => {
   const [data, setData] = useState<UsuarioColumn[]>([]);
+  const [editingId, setEditingId] = useState<number | null>(null);
 
-  // Función para traer usuarios de la API
   const fetchUsuarios = async () => {
     try {
       const res = await fetch("/api/usuarios");
@@ -32,18 +33,34 @@ export const UsuariosTab = () => {
     }
   };
 
-  // Cargar al montar el componente
   useEffect(() => {
     fetchUsuarios();
   }, []);
+
+  const columns = useMemo(
+    () => createUsuariosColumns((id) => setEditingId(id)),
+    []
+  );
+
+  const handleSuccess = () => {
+    fetchUsuarios();
+    setEditingId(null);
+  };
 
   return (
     <div className="space-y-6">
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Lado Izquierdo: Formulario */}
         <div className="lg:col-span-1 space-y-4">
-          <h3 className="text-lg font-medium">Nuevo Usuario</h3>
-          <UsuarioForm onSuccess={fetchUsuarios} /> 
+          <h3 className="text-lg font-medium">
+            {editingId ? "Editar Usuario" : "Nuevo Usuario"}
+          </h3>
+          <UsuarioForm
+            key={editingId ?? "nuevo"}
+            initialId={editingId}
+            onSuccess={handleSuccess}
+            onCancel={editingId ? () => setEditingId(null) : undefined}
+          />
         </div>
 
         {/* Lado Derecho: Tabla */}

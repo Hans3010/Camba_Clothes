@@ -1,0 +1,77 @@
+﻿commit b1291843f0ab9e188397723492baaeaccf03da20
+Author: John Jairo Zurita Salazar <jzuritajsalazar@icloud.com>
+Date:   Wed Mar 4 08:39:35 2026 -0400
+
+    feat: modulo proveedores y usuarios 100% funcional con edicion
+
+M	src/app/(dashboard)/proveedores/page.tsx
+M	src/app/api/proveedores/[id]/route.ts
+M	src/components/forms/proveedor-form.tsx
+M	src/components/layout/sidebar.tsx
+M	src/components/tables/proveedores-columns.tsx
+
+commit 456bef0f792afb3770deb3f25e5464b6d69d13c1
+Author: Hans Ribera <hanserm18@gmail.com>
+Date:   Tue Mar 3 11:20:05 2026 -0400
+
+    Acutalizaci├│n a Movimiento Inventario.
+     adem├ís ahora producto tiene soft delete.
+    Se agrego filtrado a los productos y b├║squeda.
+
+M	src/app/(dashboard)/inventario/page.tsx
+M	src/app/(dashboard)/productos/page.tsx
+M	src/app/api/categorias/[id]/route.ts
+A	src/app/api/inventario/route.ts
+M	src/app/api/productos/[id]/route.ts
+M	src/components/modules/categoria-tab.tsx
+M	src/components/tables/productos-columns.tsx
+
+commit 145e1e3b979fe4fa4b98929fb1ffdbf846437507
+Author: Hans Ribera <hanserm18@gmail.com>
+Date:   Tue Mar 3 10:57:15 2026 -0400
+
+    Correcciones de errores:
+    -Ahora funciona el npm run build y el npm run start para precargar todo y que el sistema funcione rapido
+    -Correcciones correctas a las tablas
+
+M	src/app/(dashboard)/productos/page.tsx
+M	src/app/api/categorias/[id]/route.ts
+M	src/app/api/categorias/route.ts
+M	src/app/api/productos/[id]/route.ts
+M	src/app/api/productos/route.ts
+M	src/app/api/proveedores/[id]/route.ts
+M	src/app/api/proveedores/route.ts
+M	src/app/api/sesion-caja/[id]/route.ts
+M	src/app/api/usuarios/route.ts
+M	src/components/forms/proveedor-form.tsx
+M	src/components/forms/usuario-form.tsx
+M	src/components/layout/sidebar.tsx
+M	src/components/modules/usuarios-tab.tsx
+
+commit 08a499982d0efa1aebcdf350dd282bf0c507c4ef
+Author: Hans Ribera <Hanserm18@gmail.com>
+Date:   Mon Mar 2 23:53:52 2026 -0400
+
+    Correci├│n de bugs y diversas fallas cr├¡ticas de seguridad en el sistema
+
+M	prisma/migrations/20260302160411_add_estado_and_origen/migration.sql
+M	prisma/schema.prisma
+A	src/app/api/tipo-usuarios/route.ts
+M	src/app/api/usuarios/route.ts
+M	src/app/api/ventas/route.ts
+M	src/components/forms/usuario-form.tsx
+M	src/components/modules/usuarios-tab.tsx
+M	src/components/tables/usuarios-columns.tsx
+
+commit af67da75691d3c73a3a5b9b81f3d772b7d442c2b
+Author: John Jairo Zurita Salazar <jzuritajsalazar@icloud.com>
+Date:   Mon Mar 2 23:31:06 2026 -0400
+
+    feat:Gestion de usuarios completa
+
+M	src/app/(dashboard)/configuracion/page.tsx
+A	src/app/api/usuarios/route.ts
+A	src/components/forms/usuario-form.tsx
+A	src/components/modules/usuarios-tab.tsx
+A	src/components/tables/usuarios-columns.tsx
+A	src/lib/validations/usuario.ts

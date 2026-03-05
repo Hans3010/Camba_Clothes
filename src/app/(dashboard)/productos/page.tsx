@@ -11,6 +11,17 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog"
+import { Button } from "@/components/ui/button"
+import { Plus } from "lucide-react"
+import ProductoForm from "@/components/forms/producto-form"
+import { ProductoFormValues } from "@/lib/validations/producto"
 
 export default function ProductosPage() {
   const [productos, setProductos] = useState<ProductoRow[]>([])
@@ -18,6 +29,7 @@ export default function ProductosPage() {
   const [filterCategoria, setFilterCategoria] = useState("all")
   const [filterMarca, setFilterMarca] = useState("all")
   const [filterTalla, setFilterTalla] = useState("all")
+  const [dialogOpen, setDialogOpen] = useState(false)
 
   const fetchProductos = useCallback(async () => {
     try {
@@ -47,6 +59,28 @@ export default function ProductosPage() {
     }
   }, [fetchProductos])
 
+  const handleCrearProducto = useCallback(async (values: ProductoFormValues) => {
+    const margen = values.precioVenta > 0
+      ? ((values.precioVenta - values.costo) / values.precioVenta) * 100
+      : 0
+
+    const res = await fetch("/api/productos", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ ...values, stock: 0, margen: parseFloat(margen.toFixed(2)) }),
+    })
+
+    const data = await res.json()
+    if (!res.ok) {
+      toast.error(data.error || "Error al crear producto")
+      return
+    }
+
+    toast.success("Producto creado correctamente")
+    setDialogOpen(false)
+    fetchProductos()
+  }, [fetchProductos])
+
   const columns = useMemo(() => createProductosColumns(handleToggleEstado), [handleToggleEstado])
 
   // Opciones únicas para los filtros
@@ -73,7 +107,40 @@ export default function ProductosPage() {
 
   return (
     <div className="space-y-4">
-      <h1 className="text-2xl font-bold">Productos</h1>
+      <div className="flex items-center justify-between">
+        <h1 className="text-2xl font-bold">Productos</h1>
+        <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+          <DialogTrigger asChild>
+            <Button>
+              <Plus className="mr-2 h-4 w-4" />
+              Nuevo Producto
+            </Button>
+          </DialogTrigger>
+          <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>Nuevo Producto</DialogTitle>
+            </DialogHeader>
+            <p className="text-sm text-muted-foreground -mt-2">
+              El stock inicial será 0. Añádelo mediante el módulo de Compras.
+            </p>
+            <ProductoForm
+              onSubmit={handleCrearProducto}
+              defaultValues={{
+                idCategoriaProducto: undefined as unknown as number,
+                nombreProducto: "",
+                marca: "",
+                talla: "",
+                color: "",
+                temporada: "TODO_EL_ANNO",
+                precioVenta: 0,
+                costo: 0,
+                stockMinimo: 0,
+                estado: "ACTIVO",
+              }}
+            />
+          </DialogContent>
+        </Dialog>
+      </div>
 
       {/* Filtros */}
       <div className="flex flex-wrap gap-3">

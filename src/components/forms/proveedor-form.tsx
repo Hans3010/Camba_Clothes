@@ -64,12 +64,13 @@ export const ProveedorForm = ({ initialId, onSuccess }: ProveedorFormProps) => {
         body: JSON.stringify(values),
       });
 
-      if (!res.ok) throw new Error();
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Error en la operación");
 
       toast.success(initialId ? "Actualizado correctamente" : "Registrado correctamente");
       if (onSuccess) onSuccess();
     } catch (error) {
-      toast.error("Error en la operación");
+      toast.error(error instanceof Error ? error.message : "Error en la operación");
     } finally {
       setLoading(false);
     }
@@ -77,7 +78,7 @@ export const ProveedorForm = ({ initialId, onSuccess }: ProveedorFormProps) => {
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 border p-4 rounded-xl shadow-sm bg-white">
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 border p-4 rounded-xl shadow-sm bg-card">
         <h3 className="font-bold text-lg">{initialId ? "Editar Proveedor" : "Nuevo Proveedor"}</h3>
         
         <FormField

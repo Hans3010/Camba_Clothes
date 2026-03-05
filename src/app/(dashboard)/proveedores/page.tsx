@@ -26,9 +26,9 @@ export default function ProveedoresPage() {
   }, []);
 
   return (
-    <div className="p-8 space-y-6">
+    <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold tracking-tight">Módulo de Proveedores</h1>
+        <h1 className="text-2xl font-bold">Proveedores</h1>
         {editingId && (
           <Button variant="outline" onClick={() => setEditingId(null)}>
             <Plus className="mr-2 h-4 w-4" /> Registrar Nuevo
@@ -36,7 +36,7 @@ export default function ProveedoresPage() {
         )}
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-1">
           {/* El formulario recibe el ID para saber si edita o crea */}
           <ProveedorForm 

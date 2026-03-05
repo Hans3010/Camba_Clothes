@@ -22,15 +22,26 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { usuarioCreateSchema, UsuarioCreateValues } from "@/lib/validations/usuario";
+import {
+  usuarioCreateSchema,
+  usuarioUpdateSchema,
+  UsuarioCreateValues,
+  UsuarioUpdateValues,
+} from "@/lib/validations/usuario";
 
 interface UsuarioFormProps {
+  initialId?: number | null;
   onSuccess?: () => void;
+  onCancel?: () => void;
 }
 
-export const UsuarioForm = ({ onSuccess }: UsuarioFormProps) => {
+type FormValues = UsuarioCreateValues | UsuarioUpdateValues;
+
+export const UsuarioForm = ({ initialId, onSuccess, onCancel }: UsuarioFormProps) => {
   const [loading, setLoading] = useState(false);
   const [tiposUsuario, setTiposUsuario] = useState<{ id: number; rol: string }[]>([]);
+
+  const isEditing = !!initialId;
 
   useEffect(() => {
     fetch("/api/tipo-usuarios")
@@ -39,8 +50,8 @@ export const UsuarioForm = ({ onSuccess }: UsuarioFormProps) => {
       .catch(() => {});
   }, []);
 
-  const form = useForm<UsuarioCreateValues>({
-    resolver: zodResolver(usuarioCreateSchema),
+  const form = useForm<FormValues>({
+    resolver: zodResolver(isEditing ? usuarioUpdateSchema : usuarioCreateSchema),
     defaultValues: {
       usuario: "",
       password: "",
@@ -49,11 +60,35 @@ export const UsuarioForm = ({ onSuccess }: UsuarioFormProps) => {
     },
   });
 
-  const onSubmit = async (values: UsuarioCreateValues) => {
+  // Cargar datos del usuario al editar
+  useEffect(() => {
+    if (!initialId) return;
+
+    fetch("/api/usuarios")
+      .then((r) => r.json())
+      .then((usuarios: { id: number; usuario: string; idTipoUsuario: number; estado: string }[]) => {
+        const u = usuarios.find((x) => x.id === initialId);
+        if (u) {
+          form.reset({
+            usuario: u.usuario,
+            password: "",
+            idTipoUsuario: u.idTipoUsuario,
+            estado: u.estado as "ACTIVO" | "INACTIVO",
+          });
+        }
+      })
+      .catch(() => {});
+  }, [initialId, form]);
+
+  const onSubmit = async (values: FormValues) => {
     try {
       setLoading(true);
-      const response = await fetch("/api/usuarios", {
-        method: "POST",
+
+      const url = isEditing ? `/api/usuarios/${initialId}` : "/api/usuarios";
+      const method = isEditing ? "PUT" : "POST";
+
+      const response = await fetch(url, {
+        method,
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(values),
       });
@@ -61,17 +96,14 @@ export const UsuarioForm = ({ onSuccess }: UsuarioFormProps) => {
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.error || "Error al crear el usuario");
+        throw new Error(data.error || "Error en la operación");
       }
 
-      toast.success("Usuario registrado con éxito");
-      form.reset(); // Limpia el formulario
-      
-      if (onSuccess) {
-        onSuccess(); // Refresca la tabla automáticamente
-      }
+      toast.success(isEditing ? "Usuario actualizado con éxito" : "Usuario registrado con éxito");
+      form.reset();
+      if (onSuccess) onSuccess();
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Error al crear el usuario");
+      toast.error(error instanceof Error ? error.message : "Error en la operación");
     } finally {
       setLoading(false);
     }
@@ -99,13 +131,15 @@ export const UsuarioForm = ({ onSuccess }: UsuarioFormProps) => {
           name="password"
           render={({ field }) => (
             <FormItem>
-              <FormLabel className="font-semibold">Contraseña</FormLabel>
+              <FormLabel className="font-semibold">
+                {isEditing ? "Nueva Contraseña (opcional)" : "Contraseña"}
+              </FormLabel>
               <FormControl>
-                <Input 
-                  disabled={loading} 
-                  type="password" 
-                  placeholder="Mínimo 6 caracteres" 
-                  {...field} 
+                <Input
+                  disabled={loading}
+                  type="password"
+                  placeholder={isEditing ? "Dejar en blanco para no cambiar" : "Mínimo 6 caracteres"}
+                  {...field}
                 />
               </FormControl>
               <FormMessage />
@@ -149,9 +183,9 @@ export const UsuarioForm = ({ onSuccess }: UsuarioFormProps) => {
             render={({ field }) => (
               <FormItem>
                 <FormLabel className="font-semibold">Estado</FormLabel>
-                <Select 
-                  disabled={loading} 
-                  onValueChange={field.onChange} 
+                <Select
+                  disabled={loading}
+                  onValueChange={field.onChange}
                   value={field.value}
                 >
                   <FormControl>
@@ -170,9 +204,25 @@ export const UsuarioForm = ({ onSuccess }: UsuarioFormProps) => {
           />
         </div>
 
-        <Button disabled={loading} className="w-full mt-2" type="submit">
-          {loading ? "Registrando..." : "Registrar Nuevo Usuario"}
-        </Button>
+        <div className="flex gap-2">
+          {onCancel && (
+            <Button
+              type="button"
+              variant="outline"
+              className="flex-1"
+              disabled={loading}
+              onClick={onCancel}
+            >
+              Cancelar
+            </Button>
+          )}
+          <Button disabled={loading} className="flex-1" type="submit">
+            {loading
+              ? isEditing ? "Guardando..." : "Registrando..."
+              : isEditing ? "Guardar Cambios" : "Registrar Nuevo Usuario"
+            }
+          </Button>
+        </div>
       </form>
     </Form>
   );
