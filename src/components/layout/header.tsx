@@ -3,6 +3,7 @@
 import { signOut, useSession } from "next-auth/react"
 import { Menu, LogOut, User } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { Badge } from "@/components/ui/badge"
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
 import {
   DropdownMenu,
@@ -48,15 +49,25 @@ export function Header() {
             </Avatar>
             <div className="hidden sm:flex flex-col items-start">
               <span className="text-sm font-medium leading-none">{usuario}</span>
-              <span className="text-xs text-muted-foreground leading-none mt-0.5">{rol}</span>
+              <Badge
+                variant={rol === "ADMIN" ? "default" : "secondary"}
+                className="mt-0.5 h-4 px-1.5 text-[10px] font-medium"
+              >
+                {rol === "ADMIN" ? "Administrador" : "Vendedor"}
+              </Badge>
             </div>
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="w-48">
           <DropdownMenuLabel>
-            <div className="flex flex-col">
+            <div className="flex flex-col gap-1">
               <span className="font-medium">{usuario}</span>
-              <span className="text-xs text-muted-foreground font-normal">{rol}</span>
+              <Badge
+                variant={rol === "ADMIN" ? "default" : "secondary"}
+                className="w-fit h-4 px-1.5 text-[10px] font-medium"
+              >
+                {rol === "ADMIN" ? "Administrador" : "Vendedor"}
+              </Badge>
             </div>
           </DropdownMenuLabel>
           <DropdownMenuSeparator />

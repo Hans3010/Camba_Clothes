@@ -3,7 +3,7 @@
 import { ColumnDef } from "@tanstack/react-table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Pencil } from "lucide-react";
+import { Edit } from "lucide-react";
 
 export type UsuarioColumn = {
   id: number;
@@ -49,12 +49,8 @@ export function createUsuariosColumns(
     {
       id: "acciones",
       cell: ({ row }) => (
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => onEdit(row.original.id)}
-        >
-          <Pencil className="h-4 w-4" />
+        <Button variant="ghost" size="icon" onClick={() => onEdit(row.original.id)}>
+          <Edit className="h-4 w-4" />
         </Button>
       ),
     },

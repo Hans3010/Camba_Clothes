@@ -29,7 +29,13 @@ export default function ProductosPage() {
   const [filterCategoria, setFilterCategoria] = useState("all")
   const [filterMarca, setFilterMarca] = useState("all")
   const [filterTalla, setFilterTalla] = useState("all")
-  const [dialogOpen, setDialogOpen] = useState(false)
+
+  // Dialog crear
+  const [createOpen, setCreateOpen] = useState(false)
+
+  // Dialog editar
+  const [editOpen, setEditOpen] = useState(false)
+  const [editingProducto, setEditingProducto] = useState<ProductoRow | null>(null)
 
   const fetchProductos = useCallback(async () => {
     try {
@@ -59,6 +65,14 @@ export default function ProductosPage() {
     }
   }, [fetchProductos])
 
+  const handleOpenEdit = useCallback((id: number) => {
+    const producto = productos.find((p) => p.id === id)
+    if (producto) {
+      setEditingProducto(producto)
+      setEditOpen(true)
+    }
+  }, [productos])
+
   const handleCrearProducto = useCallback(async (values: ProductoFormValues) => {
     const margen = values.precioVenta > 0
       ? ((values.precioVenta - values.costo) / values.precioVenta) * 100
@@ -77,11 +91,43 @@ export default function ProductosPage() {
     }
 
     toast.success("Producto creado correctamente")
-    setDialogOpen(false)
+    setCreateOpen(false)
     fetchProductos()
   }, [fetchProductos])
 
-  const columns = useMemo(() => createProductosColumns(handleToggleEstado), [handleToggleEstado])
+  const handleEditarProducto = useCallback(async (values: ProductoFormValues) => {
+    if (!editingProducto) return
+
+    const margen = values.precioVenta > 0
+      ? ((values.precioVenta - values.costo) / values.precioVenta) * 100
+      : 0
+
+    const res = await fetch(`/api/productos/${editingProducto.id}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        ...values,
+        stock: editingProducto.stock, // stock no se modifica aquí
+        margen: parseFloat(margen.toFixed(2)),
+      }),
+    })
+
+    const data = await res.json()
+    if (!res.ok) {
+      toast.error(data.error || "Error al actualizar producto")
+      return
+    }
+
+    toast.success("Producto actualizado correctamente")
+    setEditOpen(false)
+    setEditingProducto(null)
+    fetchProductos()
+  }, [editingProducto, fetchProductos])
+
+  const columns = useMemo(
+    () => createProductosColumns(handleToggleEstado, handleOpenEdit),
+    [handleToggleEstado, handleOpenEdit]
+  )
 
   // Opciones únicas para los filtros
   const categorias = useMemo(() =>
@@ -109,14 +155,14 @@ export default function ProductosPage() {
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold">Productos</h1>
-        <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+        <Dialog open={createOpen} onOpenChange={setCreateOpen}>
           <DialogTrigger asChild>
             <Button>
               <Plus className="mr-2 h-4 w-4" />
               Nuevo Producto
             </Button>
           </DialogTrigger>
-          <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
+          <DialogContent className="max-w-2xl">
             <DialogHeader>
               <DialogTitle>Nuevo Producto</DialogTitle>
             </DialogHeader>
@@ -186,6 +232,39 @@ export default function ProductosPage() {
       ) : (
         <DataTable searchKey="nombreProducto" columns={columns} data={filtered} />
       )}
+
+      {/* Dialog editar — fuera del flujo normal para no rerenderizar la tabla */}
+      <Dialog open={editOpen} onOpenChange={(open) => {
+        setEditOpen(open)
+        if (!open) setEditingProducto(null)
+      }}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Editar Producto</DialogTitle>
+          </DialogHeader>
+          <p className="text-sm text-muted-foreground -mt-2">
+            El stock actual es <strong>{editingProducto?.stock ?? 0}</strong> unidades y no se modifica aquí.
+          </p>
+          {editingProducto && (
+            <ProductoForm
+              key={editingProducto.id}
+              onSubmit={handleEditarProducto}
+              defaultValues={{
+                idCategoriaProducto: editingProducto.idCategoriaProducto,
+                nombreProducto: editingProducto.nombreProducto,
+                marca: editingProducto.marca ?? "",
+                talla: editingProducto.talla,
+                color: editingProducto.color,
+                temporada: editingProducto.temporada as ProductoFormValues["temporada"],
+                precioVenta: Number(editingProducto.precioVenta),
+                costo: Number(editingProducto.costo),
+                stockMinimo: editingProducto.stockMinimo,
+                estado: editingProducto.estado,
+              }}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

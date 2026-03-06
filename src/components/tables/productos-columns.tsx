@@ -1,23 +1,24 @@
 "use client"
 
 import { ColumnDef } from "@tanstack/react-table"
-import { MoreHorizontal } from "lucide-react"
+import { Edit, MoreHorizontal } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 
 export interface ProductoRow {
   id: number
+  idCategoriaProducto: number
   nombreProducto: string
   marca: string
   talla: string
   color: string
+  temporada: string
   precioVenta: number
   costo: number
   margen: number
@@ -28,7 +29,8 @@ export interface ProductoRow {
 }
 
 export const createProductosColumns = (
-  onToggleEstado: (id: number, nuevoEstado: "ACTIVO" | "INACTIVO") => void
+  onToggleEstado: (id: number, nuevoEstado: "ACTIVO" | "INACTIVO") => void,
+  onEdit?: (id: number) => void,
 ): ColumnDef<ProductoRow>[] => [
   {
     header: "Categoría",
@@ -93,33 +95,37 @@ export const createProductosColumns = (
     cell: ({ row }) => {
       const { id, estado } = row.original
       return (
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-              <MoreHorizontal className="h-4 w-4" />
+        <div className="flex items-center gap-1">
+          {onEdit && (
+            <Button variant="ghost" size="icon" onClick={() => onEdit(id)}>
+              <Edit className="h-4 w-4" />
             </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            {estado === "ACTIVO" ? (
-              <>
-                <DropdownMenuSeparator />
+          )}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="icon">
+                <MoreHorizontal className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              {estado === "ACTIVO" ? (
                 <DropdownMenuItem
                   className="text-red-600 focus:text-red-600"
                   onClick={() => onToggleEstado(id, "INACTIVO")}
                 >
                   Desactivar producto
                 </DropdownMenuItem>
-              </>
-            ) : (
-              <DropdownMenuItem
-                className="text-green-600 focus:text-green-600"
-                onClick={() => onToggleEstado(id, "ACTIVO")}
-              >
-                Activar producto
-              </DropdownMenuItem>
-            )}
-          </DropdownMenuContent>
-        </DropdownMenu>
+              ) : (
+                <DropdownMenuItem
+                  className="text-green-600 focus:text-green-600"
+                  onClick={() => onToggleEstado(id, "ACTIVO")}
+                >
+                  Activar producto
+                </DropdownMenuItem>
+              )}
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
       )
     },
   },

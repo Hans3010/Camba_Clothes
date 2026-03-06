@@ -2,6 +2,7 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
+import { useSession } from "next-auth/react"
 import {
   LayoutDashboard,
   ShoppingCart,
@@ -19,43 +20,83 @@ import {
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 
-type NavLink = { kind: "link"; href: string; label: string; icon: React.ElementType }
-type NavSection = { kind: "section"; label: string }
+type NavLink = {
+  kind: "link"
+  href: string
+  label: string
+  icon: React.ElementType
+  roles?: string[] // si está vacío/undefined = todos los roles
+}
+type NavSection = {
+  kind: "section"
+  label: string
+  roles?: string[]
+}
 type NavEntry = NavLink | NavSection
 
 const navEntries: NavEntry[] = [
-  { kind: "link",    href: "/dashboard",     label: "Dashboard",        icon: LayoutDashboard },
+  { kind: "link",    href: "/dashboard",     label: "Dashboard",       icon: LayoutDashboard },
 
   { kind: "section", label: "Operaciones" },
-  { kind: "link",    href: "/pos",           label: "Punto de Venta",   icon: ShoppingCart },
-  { kind: "link",    href: "/caja",          label: "Caja",             icon: Vault },
+  { kind: "link",    href: "/pos",           label: "Punto de Venta",  icon: ShoppingCart },
+  { kind: "link",    href: "/caja",          label: "Caja",            icon: Vault },
 
-  { kind: "section", label: "Registros" },
-  { kind: "link",    href: "/ventas",        label: "Historial",        icon: Receipt },
+  // Solo ADMIN
+  { kind: "section", label: "Registros",     roles: ["ADMIN"] },
+  { kind: "link",    href: "/ventas",        label: "Historial",       icon: Receipt,      roles: ["ADMIN"] },
 
   { kind: "section", label: "Catálogo" },
-  { kind: "link",    href: "/productos",     label: "Productos",        icon: Package },
-  { kind: "link",    href: "/categoria",     label: "Categorías",       icon: Tag },
-  { kind: "link",    href: "/clientes",      label: "Clientes",         icon: Users },
+  { kind: "link",    href: "/productos",     label: "Productos",       icon: Package },
+  { kind: "link",    href: "/categoria",     label: "Categorías",      icon: Tag,          roles: ["ADMIN"] },
+  { kind: "link",    href: "/clientes",      label: "Clientes",        icon: Users },
 
-  { kind: "section", label: "Abastecimiento" },
-  { kind: "link",    href: "/proveedores",   label: "Proveedores",      icon: Truck },
-  { kind: "link",    href: "/compras",       label: "Compras",          icon: ShoppingBag },
+  // Solo ADMIN
+  { kind: "section", label: "Abastecimiento", roles: ["ADMIN"] },
+  { kind: "link",    href: "/proveedores",   label: "Proveedores",     icon: Truck,        roles: ["ADMIN"] },
+  { kind: "link",    href: "/compras",       label: "Compras",         icon: ShoppingBag,  roles: ["ADMIN"] },
 
-  { kind: "section", label: "Control" },
-  { kind: "link",    href: "/inventario",    label: "Movimientos",      icon: ArrowUpDown },
-  { kind: "link",    href: "/reportes",      label: "Reportes",         icon: BarChart3 },
+  { kind: "section", label: "Control",        roles: ["ADMIN"] },
+  { kind: "link",    href: "/inventario",    label: "Movimientos",     icon: ArrowUpDown,  roles: ["ADMIN"] },
+  { kind: "link",    href: "/reportes",      label: "Reportes",        icon: BarChart3,    roles: ["ADMIN"] },
 
-  { kind: "section", label: "Sistema" },
-  { kind: "link",    href: "/configuracion", label: "Configuración",    icon: Settings },
+  // Solo ADMIN
+  { kind: "section", label: "Sistema",       roles: ["ADMIN"] },
+  { kind: "link",    href: "/configuracion", label: "Configuración",   icon: Settings,     roles: ["ADMIN"] },
 ]
 
 function NavContent() {
   const pathname = usePathname()
+  const { data: session } = useSession()
+  const rol = session?.user?.rol ?? ""
+
+  const visible = navEntries.filter((entry) =>
+    !entry.roles || entry.roles.includes(rol)
+  )
+
+  // Eliminar secciones que quedaron sin links visibles a continuación
+  const filtered: NavEntry[] = []
+  for (let i = 0; i < visible.length; i++) {
+    const entry = visible[i]
+    if (entry.kind === "section") {
+      // Solo incluir la sección si hay al menos un link después de ella
+      const hasLinks = visible.slice(i + 1).some(
+        (e) => e.kind === "link" || (e.kind === "section" && false)
+      )
+      // Más preciso: buscar el próximo link antes de la siguiente sección
+      let hasNextLink = false
+      for (let j = i + 1; j < visible.length; j++) {
+        if (visible[j].kind === "section") break
+        if (visible[j].kind === "link") { hasNextLink = true; break }
+      }
+      if (hasNextLink || hasLinks) filtered.push(entry)
+    } else {
+      filtered.push(entry)
+    }
+  }
 
   return (
     <nav className="flex-1 px-3 py-4 overflow-y-auto">
-      {navEntries.map((entry, i) => {
+      {filtered.map((entry, i) => {
         if (entry.kind === "section") {
           return (
             <p
