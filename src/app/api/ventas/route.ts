@@ -4,27 +4,59 @@ import { authOptions } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 import { crearVentaSchema } from "@/lib/validations/venta"
 
-export async function GET() {
+const ventaInclude = {
+  cliente: true,
+  usuario: { select: { id: true, usuario: true } },
+  tipoPago: true,
+  detalles: {
+    include: {
+      producto: {
+        select: { id: true, nombreProducto: true, talla: true, color: true },
+      },
+    },
+  },
+} as const
+
+export async function GET(req: NextRequest) {
   const session = await getServerSession(authOptions)
   if (!session) return NextResponse.json({ error: "No autorizado" }, { status: 401 })
 
-  const ventas = await prisma.venta.findMany({
-    include: {
-      cliente: true,
-      usuario: { select: { id: true, usuario: true } },
-      tipoPago: true,
-      detalles: {
-        include: {
-          producto: {
-            select: { id: true, nombreProducto: true, talla: true, color: true },
-          },
-        },
-      },
-    },
-    orderBy: { fecha: "desc" },
-    take: 100,
-  })
+  const { searchParams } = new URL(req.url)
+  const sesionActual = searchParams.get("sesion") === "actual"
 
+  // ?sesion=actual → Solo ventas de la sesión de caja actualmente abierta del usuario
+  // Usado por el componente de resumen en la página de caja
+  if (sesionActual) {
+    const sesionAbierta = await prisma.sesionCaja.findFirst({
+      where: { idUsuario: session.user.id, estado: "ABIERTA" },
+    })
+    if (!sesionAbierta) return NextResponse.json([])
+
+    const ventas = await prisma.venta.findMany({
+      where: { idSesionCaja: sesionAbierta.id },
+      include: ventaInclude,
+      orderBy: { fecha: "desc" },
+    })
+    return NextResponse.json(ventas)
+  }
+
+  // VENDEDOR sin filtro → Todas sus ventas históricas (todas sus sesiones)
+  if (session.user.rol === "VENDEDOR") {
+    const ventas = await prisma.venta.findMany({
+      where: { idUsuario: session.user.id },
+      include: ventaInclude,
+      orderBy: { fecha: "desc" },
+      take: 500,
+    })
+    return NextResponse.json(ventas)
+  }
+
+  // ADMIN → Todas las ventas del sistema
+  const ventas = await prisma.venta.findMany({
+    include: ventaInclude,
+    orderBy: { fecha: "desc" },
+    take: 200,
+  })
   return NextResponse.json(ventas)
 }
 
@@ -109,7 +141,6 @@ export async function POST(req: NextRequest) {
       },
     })
 
-    // Decrementar stock y registrar movimientos de inventario
     for (const item of items) {
       await tx.producto.update({
         where: { id: item.idProducto },

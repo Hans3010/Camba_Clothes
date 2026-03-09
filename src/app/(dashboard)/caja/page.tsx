@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { AbrirCajaForm } from "@/components/forms/abrir-caja-form"
 import { ResumenCaja } from "@/components/pos/resumen-caja"
+import { VentasSesionActual } from "@/components/pos/ventas-sesion-actual"
 
 export default async function CajaPage() {
   const session = await getServerSession(authOptions)
@@ -25,7 +26,7 @@ export default async function CajaPage() {
     },
   })
 
-  // Serialize Prisma Decimal types before passing to Client Components
+  // Serializar Decimal antes de pasar a Client Components
   const sesionData = sesionActiva
     ? {
         id: sesionActiva.id,
@@ -55,7 +56,11 @@ export default async function CajaPage() {
       </div>
 
       {sesionData ? (
-        <ResumenCaja sesion={sesionData} />
+        <>
+          <ResumenCaja sesion={sesionData} />
+          {/* Historial de ventas de la sesión actual — se refresca cada 30s */}
+          <VentasSesionActual />
+        </>
       ) : (
         <Card className="max-w-md">
           <CardHeader>

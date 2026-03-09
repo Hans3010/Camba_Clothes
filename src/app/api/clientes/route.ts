@@ -2,15 +2,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
-import { z } from "zod"
-
-const clienteSchema = z.object({
-  nombre: z.string().min(1, "El nombre es obligatorio"),
-  apPaterno: z.string().min(1, "El apellido paterno es obligatorio"),
-  apMaterno: z.string().optional(),
-  telefono: z.string().min(1, "El teléfono es obligatorio"),
-  correo: z.string().email("Correo inválido").optional().or(z.literal("")),
-})
+import { clienteSchema } from "@/lib/validations/cliente"
 
 export async function GET(req: NextRequest) {
   const session = await getServerSession(authOptions)
@@ -22,6 +14,8 @@ export async function GET(req: NextRequest) {
   const clientes = await prisma.cliente.findMany({
     where: q
       ? {
+          // Cuando se busca (POS/autocomplete), solo clientes activos
+          estado: "ACTIVO",
           OR: [
             { nombre: { contains: q, mode: "insensitive" } },
             { apPaterno: { contains: q, mode: "insensitive" } },
@@ -29,8 +23,8 @@ export async function GET(req: NextRequest) {
             { telefono: { contains: q } },
           ],
         }
-      : {},
-    take: 20,
+      : {}, // Sin query: todos los clientes para la página de gestión
+    take: q ? 20 : undefined,
     orderBy: [{ apPaterno: "asc" }, { nombre: "asc" }],
   })
 
@@ -53,9 +47,9 @@ export async function POST(req: NextRequest) {
     data: {
       nombre,
       apPaterno,
-      apMaterno: apMaterno || undefined,
+      apMaterno: apMaterno || null,
       telefono,
-      correo: correo || undefined,
+      correo: correo || null,
     },
   })
 

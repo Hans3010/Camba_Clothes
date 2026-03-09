@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useMemo, useCallback } from "react"
 import { useRouter } from "next/navigation"
 import { toast } from "sonner"
 import { Loader2, Search, UserPlus, CheckCircle2 } from "lucide-react"
@@ -10,6 +10,16 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
+import {
+  AlertDialog,
+  AlertDialogContent,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogCancel,
+  AlertDialogAction,
+} from "@/components/ui/alert-dialog"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -45,6 +55,114 @@ function useDebounce<T>(value: T, delay: number): T {
   return debounced
 }
 
+// ─── Fake QR Code (visual simulation) ───────────────────────────────────────
+function FakeQRCode({ size = 23, cell = 7 }: { size?: number; cell?: number }) {
+  const pattern = useMemo(() => {
+    let seed = 98765
+    const rand = () => {
+      seed = (seed * 9301 + 49297) % 233280
+      return seed / 233280
+    }
+
+    const grid: boolean[][] = Array(size)
+      .fill(null)
+      .map(() => Array(size).fill(null).map(() => rand() > 0.48))
+
+    // Finder pattern helper (top-left, top-right, bottom-left)
+    const addFinder = (r0: number, c0: number) => {
+      for (let r = 0; r < 7; r++) {
+        for (let c = 0; c < 7; c++) {
+          const border = r === 0 || r === 6 || c === 0 || c === 6
+          const center = r >= 2 && r <= 4 && c >= 2 && c <= 4
+          grid[r0 + r][c0 + c] = border || center
+        }
+      }
+    }
+
+    addFinder(0, 0)
+    addFinder(0, size - 7)
+    addFinder(size - 7, 0)
+    return grid
+  }, [size])
+
+  return (
+    <div className="p-3 bg-white rounded-xl shadow-lg border inline-block">
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: `repeat(${size}, ${cell}px)`,
+          lineHeight: 0,
+        }}
+      >
+        {pattern.flat().map((dark, i) => (
+          <div
+            key={i}
+            style={{ width: cell, height: cell, background: dark ? "#1a1a1a" : "#fff" }}
+          />
+        ))}
+      </div>
+    </div>
+  )
+}
+
+// ─── QR Payment Screen ───────────────────────────────────────────────────────
+function QRScreen({ amount, onPaid }: { amount: number; onPaid: () => void }) {
+  const [countdown, setCountdown] = useState(3)
+  const [paid, setPaid] = useState(false)
+
+  const handlePaid = useCallback(onPaid, [onPaid])
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCountdown((prev) => {
+        if (prev <= 1) {
+          clearInterval(timer)
+          setPaid(true)
+          handlePaid()
+          return 0
+        }
+        return prev - 1
+      })
+    }, 1000)
+    return () => clearInterval(timer)
+  }, [handlePaid])
+
+  return (
+    <div className="flex flex-col items-center gap-5 py-2">
+      <p className="text-sm text-muted-foreground text-center">
+        Muestra este código QR al cliente para confirmar el pago
+      </p>
+
+      <div className="relative">
+        <FakeQRCode />
+        {paid && (
+          <div className="absolute inset-0 bg-white/95 rounded-xl flex flex-col items-center justify-center gap-2">
+            <CheckCircle2 className="h-14 w-14 text-green-500" />
+            <p className="text-sm font-semibold text-green-600">¡Pago confirmado!</p>
+          </div>
+        )}
+      </div>
+
+      <div className="text-center space-y-1">
+        <p className="text-3xl font-bold tracking-tight">Bs. {amount.toFixed(2)}</p>
+        {!paid ? (
+          <div className="flex items-center gap-2 justify-center text-sm text-muted-foreground">
+            <span className="inline-block h-2 w-2 rounded-full bg-green-500 animate-pulse" />
+            Esperando pago · confirma en{" "}
+            <span className="font-bold text-foreground tabular-nums">{countdown}s</span>
+          </div>
+        ) : (
+          <p className="text-sm text-green-600 flex items-center justify-center gap-1.5">
+            <Loader2 className="h-3.5 w-3.5 animate-spin" />
+            Registrando venta...
+          </p>
+        )}
+      </div>
+    </div>
+  )
+}
+
+// ─── Main component ──────────────────────────────────────────────────────────
 type Props = {
   open: boolean
   onClose: () => void
@@ -55,14 +173,14 @@ type Props = {
 export default function CheckoutDialog({ open, onClose, cart, onSuccess }: Props) {
   const router = useRouter()
 
-  // Client search state
+  // Client search
   const [clienteQuery, setClienteQuery] = useState("")
   const [clienteResults, setClienteResults] = useState<Cliente[]>([])
   const [selectedCliente, setSelectedCliente] = useState<Cliente | null>(null)
   const [showDropdown, setShowDropdown] = useState(false)
   const debouncedClienteQuery = useDebounce(clienteQuery, 300)
 
-  // Quick create client state
+  // Quick create client
   const [createOpen, setCreateOpen] = useState(false)
   const [newCliente, setNewCliente] = useState({
     nombre: "",
@@ -72,15 +190,18 @@ export default function CheckoutDialog({ open, onClose, cart, onSuccess }: Props
   })
   const [creatingCliente, setCreatingCliente] = useState(false)
 
-  // Payment method state
+  // Payment
   const [tiposPago, setTiposPago] = useState<TipoPago[]>([])
   const [selectedTipoPagoId, setSelectedTipoPagoId] = useState<number | null>(null)
 
-  // Sale state
+  // Flow control
+  type Step = "form" | "qr"
+  const [step, setStep] = useState<Step>("form")
+  const [confirmOpen, setConfirmOpen] = useState(false)
   const [loading, setLoading] = useState(false)
   const [ventaCreada, setVentaCreada] = useState<VentaConDetalles | null>(null)
 
-  // Reset state when dialog opens
+  // Reset on open
   useEffect(() => {
     if (open) {
       setClienteQuery("")
@@ -89,11 +210,13 @@ export default function CheckoutDialog({ open, onClose, cart, onSuccess }: Props
       setSelectedTipoPagoId(null)
       setVentaCreada(null)
       setCreateOpen(false)
+      setConfirmOpen(false)
+      setStep("form")
       setNewCliente({ nombre: "", apPaterno: "", apMaterno: "", telefono: "" })
     }
   }, [open])
 
-  // Load payment types on open
+  // Load payment types
   useEffect(() => {
     if (!open) return
     fetch("/api/tipos-pago")
@@ -117,7 +240,10 @@ export default function CheckoutDialog({ open, onClose, cart, onSuccess }: Props
   const subtotal = cart.reduce((acc, i) => acc + i.precioVenta * i.cantidad, 0)
   const totalItems = cart.reduce((acc, i) => acc + i.cantidad, 0)
 
-  async function handleConfirm() {
+  const selectedMetodo = tiposPago.find((tp) => tp.id === selectedTipoPagoId)?.tipoMetodo
+
+  // ── Validate before showing confirmation ──
+  function handleClickConfirm() {
     if (!selectedCliente) {
       toast.error("Selecciona un cliente para continuar")
       return
@@ -126,15 +252,29 @@ export default function CheckoutDialog({ open, onClose, cart, onSuccess }: Props
       toast.error("Selecciona un método de pago")
       return
     }
+    setConfirmOpen(true)
+  }
 
+  // ── After user confirms "¿Estás seguro?" ──
+  function handleProceed() {
+    setConfirmOpen(false)
+    if (selectedMetodo === "QR") {
+      setStep("qr") // Show QR simulation → auto-processes after 3s
+    } else {
+      processVenta() // Direct processing for cash/card
+    }
+  }
+
+  // ── API call to register the sale ──
+  async function processVenta() {
     setLoading(true)
     try {
       const res = await fetch("/api/ventas", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          idCliente: selectedCliente.id,
-          idTipoPago: selectedTipoPagoId,
+          idCliente: selectedCliente!.id,
+          idTipoPago: selectedTipoPagoId!,
           items: cart.map((i) => ({
             idProducto: i.id,
             cantidad: i.cantidad,
@@ -157,6 +297,7 @@ export default function CheckoutDialog({ open, onClose, cart, onSuccess }: Props
         } else {
           toast.error(data.error ?? "Error al registrar la venta")
         }
+        setStep("form")
         return
       }
 
@@ -165,6 +306,7 @@ export default function CheckoutDialog({ open, onClose, cart, onSuccess }: Props
       toast.success(`Venta #${data.id} registrada exitosamente`)
     } catch {
       toast.error("Error de conexión al registrar la venta")
+      setStep("form")
     } finally {
       setLoading(false)
     }
@@ -201,10 +343,11 @@ export default function CheckoutDialog({ open, onClose, cart, onSuccess }: Props
 
   function handleClose() {
     setVentaCreada(null)
+    setStep("form")
     onClose()
   }
 
-  // --- RECEIPT VIEW ---
+  // ── RECEIPT VIEW ──────────────────────────────────────────────────────────
   if (ventaCreada) {
     return (
       <Dialog open={open} onOpenChange={handleClose}>
@@ -221,9 +364,72 @@ export default function CheckoutDialog({ open, onClose, cart, onSuccess }: Props
     )
   }
 
-  // --- CHECKOUT FORM VIEW ---
+  // ── QR SCREEN ─────────────────────────────────────────────────────────────
+  if (step === "qr") {
+    return (
+      <Dialog open={open} onOpenChange={handleClose}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Pago por QR</DialogTitle>
+          </DialogHeader>
+          <QRScreen amount={subtotal} onPaid={processVenta} />
+        </DialogContent>
+      </Dialog>
+    )
+  }
+
+  // ── CHECKOUT FORM VIEW ────────────────────────────────────────────────────
   return (
     <>
+      {/* AlertDialog: ¿Estás seguro? */}
+      <AlertDialog open={confirmOpen} onOpenChange={setConfirmOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>¿Confirmar la venta?</AlertDialogTitle>
+            <AlertDialogDescription asChild>
+              <div className="space-y-2 text-sm">
+                <div className="rounded-md bg-muted p-3 space-y-1">
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Cliente:</span>
+                    <span className="font-medium">
+                      {selectedCliente?.nombre} {selectedCliente?.apPaterno}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Método de pago:</span>
+                    <span className="font-medium">
+                      {selectedMetodo ? METODO_LABEL[selectedMetodo] ?? selectedMetodo : "—"}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Productos:</span>
+                    <span className="font-medium">
+                      {totalItems} {totalItems === 1 ? "item" : "items"}
+                    </span>
+                  </div>
+                  <div className="flex justify-between border-t pt-1 mt-1">
+                    <span className="font-semibold">Total a cobrar:</span>
+                    <span className="font-bold text-base">Bs. {subtotal.toFixed(2)}</span>
+                  </div>
+                </div>
+                {selectedMetodo === "QR" && (
+                  <p className="text-xs text-muted-foreground text-center">
+                    Se mostrará un código QR para confirmar el pago.
+                  </p>
+                )}
+              </div>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={handleProceed}>
+              {selectedMetodo === "QR" ? "Mostrar QR" : "Confirmar venta"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Main checkout dialog */}
       <Dialog open={open && !createOpen} onOpenChange={onClose}>
         <DialogContent className="max-w-lg">
           <DialogHeader>
@@ -248,7 +454,9 @@ export default function CheckoutDialog({ open, onClose, cart, onSuccess }: Props
             ))}
           </div>
           <div className="flex justify-between font-bold text-base">
-            <span>Total ({totalItems} {totalItems === 1 ? "item" : "items"})</span>
+            <span>
+              Total ({totalItems} {totalItems === 1 ? "item" : "items"})
+            </span>
             <span className="text-primary">Bs. {subtotal.toFixed(2)}</span>
           </div>
 
@@ -262,7 +470,9 @@ export default function CheckoutDialog({ open, onClose, cart, onSuccess }: Props
                 <span className="text-sm">
                   {selectedCliente.nombre} {selectedCliente.apPaterno}
                   {selectedCliente.apMaterno ? ` ${selectedCliente.apMaterno}` : ""}
-                  <span className="text-muted-foreground ml-1.5">· {selectedCliente.telefono}</span>
+                  <span className="text-muted-foreground ml-1.5">
+                    · {selectedCliente.telefono}
+                  </span>
                 </span>
                 <Button
                   variant="ghost"
@@ -351,10 +561,12 @@ export default function CheckoutDialog({ open, onClose, cart, onSuccess }: Props
             size="lg"
             className="w-full"
             disabled={loading || !selectedCliente || !selectedTipoPagoId}
-            onClick={handleConfirm}
+            onClick={handleClickConfirm}
           >
             {loading && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-            {loading ? "Procesando venta..." : `Confirmar Venta · Bs. ${subtotal.toFixed(2)}`}
+            {loading
+              ? "Procesando venta..."
+              : `Confirmar Venta · Bs. ${subtotal.toFixed(2)}`}
           </Button>
         </DialogContent>
       </Dialog>
