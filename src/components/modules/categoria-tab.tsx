@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { toast } from "sonner"
+import { Edit } from "lucide-react"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -14,6 +15,12 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog"
 import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
+import {
   Table,
   TableBody,
   TableCell,
@@ -21,6 +28,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
+import { MoreHorizontal } from "lucide-react"
 
 interface Categoria {
   id: number
@@ -112,7 +120,7 @@ export default function CategoriasTab() {
             <TableHead>Nombre</TableHead>
             <TableHead>Descripción</TableHead>
             <TableHead>Estado</TableHead>
-            <TableHead>Acciones</TableHead>
+            <TableHead className="w-20"></TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -126,28 +134,34 @@ export default function CategoriasTab() {
                 </Badge>
               </TableCell>
               <TableCell>
-                <div className="flex gap-2">
-                  <Button variant="outline" size="sm" onClick={() => openEdit(cat)}>
-                    Editar
+                <div className="flex items-center gap-1">
+                  <Button variant="ghost" size="icon" onClick={() => openEdit(cat)}>
+                    <Edit className="h-4 w-4" />
                   </Button>
-                  {cat.estado === "ACTIVO" ? (
-                    <Button
-                      variant="destructive"
-                      size="sm"
-                      onClick={() => handleToggleEstado(cat.id, "INACTIVO")}
-                    >
-                      Desactivar
-                    </Button>
-                  ) : (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="text-green-600 border-green-600 hover:bg-green-50"
-                      onClick={() => handleToggleEstado(cat.id, "ACTIVO")}
-                    >
-                      Activar
-                    </Button>
-                  )}
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="ghost" size="icon">
+                        <MoreHorizontal className="h-4 w-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      {cat.estado === "ACTIVO" ? (
+                        <DropdownMenuItem
+                          className="text-red-600 focus:text-red-600"
+                          onClick={() => handleToggleEstado(cat.id, "INACTIVO")}
+                        >
+                          Desactivar
+                        </DropdownMenuItem>
+                      ) : (
+                        <DropdownMenuItem
+                          className="text-green-600 focus:text-green-600"
+                          onClick={() => handleToggleEstado(cat.id, "ACTIVO")}
+                        >
+                          Activar
+                        </DropdownMenuItem>
+                      )}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                 </div>
               </TableCell>
             </TableRow>

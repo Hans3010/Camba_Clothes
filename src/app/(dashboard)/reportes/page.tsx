@@ -1,22 +1,149 @@
+"use client"
+
+import { useState, useEffect, useCallback, useMemo } from "react"
+import { useSession } from "next-auth/react"
+import { toast } from "sonner"
+import { DataTable } from "@/components/ui/data-table"
+import { createSesionesColumns, SesionRow } from "@/components/tables/sesiones-columns"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { BarChart3 } from "lucide-react"
+import { Vault, TrendingUp, Clock, CheckCircle2 } from "lucide-react"
 
 export default function ReportesPage() {
+  const { data: session } = useSession()
+  const isAdmin = session?.user?.rol === "ADMIN"
+
+  const [sesiones, setSesiones] = useState<SesionRow[]>([])
+  const [loading, setLoading] = useState(true)
+
+  const fetchSesiones = useCallback(async () => {
+    try {
+      const res = await fetch("/api/sesion-caja/historial")
+      const data = await res.json()
+      setSesiones(Array.isArray(data) ? data : [])
+    } catch {
+      toast.error("Error al cargar historial de sesiones")
+    } finally {
+      setLoading(false)
+    }
+  }, [])
+
+  useEffect(() => {
+    fetchSesiones()
+  }, [fetchSesiones])
+
+  const columns = useMemo(() => createSesionesColumns(isAdmin), [isAdmin])
+
+  const stats = useMemo(() => {
+    const cerradas = sesiones.filter((s) => s.estado === "CERRADA")
+    const totalVendido = sesiones.reduce((acc, s) => acc + s.totalVendido, 0)
+    const totalVentas = sesiones.reduce((acc, s) => acc + s.cantidadVentas, 0)
+    const promDuracion =
+      cerradas.length > 0
+        ? Math.round(
+            cerradas
+              .filter((s) => s.duracionMin !== null)
+              .reduce((acc, s) => acc + (s.duracionMin ?? 0), 0) / cerradas.length
+          )
+        : null
+
+    return { totalVendido, totalVentas, sesionesCount: sesiones.length, promDuracion }
+  }, [sesiones])
+
+  function formatDuracion(min: number): string {
+    if (min < 60) return `${min} min`
+    const h = Math.floor(min / 60)
+    const m = min % 60
+    return m > 0 ? `${h}h ${m}min` : `${h}h`
+  }
+
   return (
-    <div className="space-y-4">
-      <h1 className="text-2xl font-bold">Reportes</h1>
-      <Card className="max-w-md">
-        <CardHeader className="flex flex-row items-center gap-3 pb-2">
-          <BarChart3 className="h-5 w-5 text-muted-foreground" />
-          <CardTitle className="text-base">Módulo Reportes — En desarrollo</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <p className="text-sm text-muted-foreground">
-            Ventas por período, inventario actual, productos más vendidos por categoría
-            y rentabilidad por producto.
+    <div className="space-y-6">
+      <div>
+        <h1 className="text-2xl font-bold">Reportes</h1>
+        <p className="text-sm text-muted-foreground mt-1">
+          {isAdmin ? "Historial de todas las sesiones de caja" : "Tu historial de sesiones de caja"}
+        </p>
+      </div>
+
+      {/* Tarjetas de resumen */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
+            <CardTitle className="text-sm font-medium text-muted-foreground">
+              Total Sesiones
+            </CardTitle>
+            <Vault className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{stats.sesionesCount}</div>
+            <p className="text-xs text-muted-foreground mt-1">
+              {isAdmin ? "de todos los usuarios" : "realizadas"}
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
+            <CardTitle className="text-sm font-medium text-muted-foreground">
+              Total Recaudado
+            </CardTitle>
+            <TrendingUp className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">Bs. {stats.totalVendido.toFixed(2)}</div>
+            <p className="text-xs text-muted-foreground mt-1">en ventas completadas</p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
+            <CardTitle className="text-sm font-medium text-muted-foreground">
+              Total Ventas
+            </CardTitle>
+            <CheckCircle2 className="h-4 w-4 text-green-600" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-green-600">{stats.totalVentas}</div>
+            <p className="text-xs text-muted-foreground mt-1">transacciones completadas</p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
+            <CardTitle className="text-sm font-medium text-muted-foreground">
+              Duración Promedio
+            </CardTitle>
+            <Clock className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">
+              {stats.promDuracion !== null ? formatDuracion(stats.promDuracion) : "—"}
+            </div>
+            <p className="text-xs text-muted-foreground mt-1">por sesión de caja</p>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Historial de sesiones */}
+      <div className="space-y-2">
+        <h2 className="text-lg font-semibold">Historial de Sesiones</h2>
+        {loading ? (
+          <p className="text-sm text-muted-foreground py-8 text-center">
+            Cargando sesiones...
           </p>
-        </CardContent>
-      </Card>
+        ) : sesiones.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-16 text-muted-foreground gap-2">
+            <Vault className="h-10 w-10 opacity-30" />
+            <p>No hay sesiones de caja registradas</p>
+          </div>
+        ) : (
+          <DataTable
+            searchKey={isAdmin ? "usuario" : "horaApertura"}
+            columns={columns}
+            data={sesiones}
+          />
+        )}
+      </div>
     </div>
   )
 }
