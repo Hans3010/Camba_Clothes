@@ -1,22 +1,42 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { ShoppingBag } from "lucide-react"
+"use client";
+
+import { useEffect, useState } from "react";
+import CompraForm from "@/components/forms/compra-form";
+import ProductoForm from "@/components/forms/producto-form";
 
 export default function ComprasPage() {
+  const [proveedores, setProveedores] = useState<any[]>([]);
+  const [productos, setProductos] = useState<any[]>([]);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      const resProv = await fetch("/api/proveedores");
+      const resProd = await fetch("/api/productos");
+      setProveedores(await resProv.json());
+      setProductos(await resProd.json());
+    };
+    fetchData();
+  }, []);
+
   return (
-    <div className="space-y-4">
-      <h1 className="text-2xl font-bold">Compras</h1>
-      <Card className="max-w-md">
-        <CardHeader className="flex flex-row items-center gap-3 pb-2">
-          <ShoppingBag className="h-5 w-5 text-muted-foreground" />
-          <CardTitle className="text-base">Módulo Compras — En desarrollo</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <p className="text-sm text-muted-foreground">
-            Registro de compras a proveedores. Actualiza el stock de productos
-            automáticamente y registra movimientos de inventario.
-          </p>
-        </CardContent>
-      </Card>
+    <div className="space-y-10">
+      <h1 className="text-2xl font-bold">Registrar Compra</h1>
+      <CompraForm proveedores={proveedores} productos={productos} />
+
+      <h2 className="text-xl font-semibold">Registrar Producto</h2>
+      <ProductoForm
+        onSubmit={async (values) => {
+          const res = await fetch("/api/productos", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(values),
+          });
+          if (res.ok) {
+            const nuevo = await res.json();
+            setProductos((prev) => [...prev, nuevo]);
+          }
+        }}
+      />
     </div>
-  )
+  );
 }
