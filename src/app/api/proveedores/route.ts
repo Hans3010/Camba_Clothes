@@ -1,70 +1,40 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { proveedorSchema } from "@/lib/validations/proveedor";
 
+// GET: Listar todos los proveedores
 export async function GET() {
   try {
-    const session = await getServerSession(authOptions);
-    if (!session) {
-      return NextResponse.json({ error: "No autorizado" }, { status: 401 });
-    }
-
     const proveedores = await prisma.proveedor.findMany({
-      orderBy: { nombreEmpresa: "asc" },
+      orderBy: { id: "desc" }, // Los más nuevos primero
     });
-    
     return NextResponse.json(proveedores);
   } catch (error) {
-    console.error("Error al obtener proveedores:", error);
     return NextResponse.json(
-      { error: "Ocurrió un error al obtener los proveedores" },
+      { error: "Error al obtener la lista de proveedores" }, 
       { status: 500 }
     );
   }
 }
 
-export async function POST(request: NextRequest) {
+// POST: Registrar un nuevo proveedor
+export async function POST(req: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
-    if (!session) {
-      return NextResponse.json({ error: "No autorizado" }, { status: 401 });
-    }
-
-    const body = await request.json();
-    const result = proveedorSchema.safeParse(body);
+    const body = await req.json();
     
-    if (!result.success) {
-      return NextResponse.json(
-        { error: "Datos inválidos", details: result.error.flatten() },
-        { status: 400 }
-      );
-    }
+    // Validamos los datos con Zod antes de tocar la base de datos
+    const validatedData = proveedorSchema.parse(body);
 
-    const existe = await prisma.proveedor.findFirst({
-      where: { nombreEmpresa: { equals: result.data.nombreEmpresa, mode: "insensitive" } },
-    })
-    if (existe) {
-      return NextResponse.json({ error: "Ya existe un proveedor con ese nombre de empresa" }, { status: 400 })
-    }
-
-    const newProveedor = await prisma.proveedor.create({
-      data: {
-        nombreEmpresa: result.data.nombreEmpresa,
-        representante: result.data.representante,
-        telefono: result.data.telefono,
-        correo: result.data.correo || null,
-        ubicacion: result.data.ubicacion || null,
-      },
+    const nuevoProveedor = await prisma.proveedor.create({
+      data: validatedData,
     });
 
-    return NextResponse.json(newProveedor, { status: 201 });
+    return NextResponse.json(nuevoProveedor, { status: 201 });
   } catch (error) {
-    console.error("Error al crear proveedor:", error);
+    console.error("Error en POST proveedores:", error);
     return NextResponse.json(
-      { error: "Ocurrió un error al crear el proveedor" },
-      { status: 500 }
+      { error: "Error al crear el proveedor. Verifique los datos." }, 
+      { status: 400 }
     );
   }
 }

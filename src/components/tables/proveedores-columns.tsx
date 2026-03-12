@@ -2,7 +2,7 @@
 
 import { ColumnDef } from "@tanstack/react-table";
 import { Button } from "@/components/ui/button";
-import { Edit } from "lucide-react";
+import { Edit, Trash } from "lucide-react";
 
 export type ProveedorColumn = {
   id: number;
@@ -12,14 +12,17 @@ export type ProveedorColumn = {
   correo: string;
 };
 
-export const columns = (onEdit: (id: number) => void): ColumnDef<ProveedorColumn>[] => [
+export const columns = (
+  onEdit: (id: number) => void,
+  onDelete: (id: number) => void
+): ColumnDef<ProveedorColumn>[] => [
   {
-    accessorKey: "nombreEmpresa", // DEBE coincidir con el esquema
+    accessorKey: "nombreEmpresa",
     header: "Empresa",
   },
   {
-    accessorKey: "representante", // DEBE coincidir con el esquema
-    header: "Contacto",
+    accessorKey: "representante",
+    header: "Representante",
   },
   {
     accessorKey: "telefono",
@@ -29,9 +32,14 @@ export const columns = (onEdit: (id: number) => void): ColumnDef<ProveedorColumn
     id: "actions",
     header: "Acciones",
     cell: ({ row }) => (
-      <Button variant="ghost" size="icon" onClick={() => onEdit(row.original.id)}>
-        <Edit className="h-4 w-4" />
-      </Button>
+      <div className="flex items-center gap-2">
+        <Button variant="ghost" size="icon" onClick={() => onEdit(row.original.id)}>
+          <Edit className="h-4 w-4 text-blue-600" />
+        </Button>
+        <Button variant="ghost" size="icon" onClick={() => onDelete(row.original.id)}>
+          <Trash className="h-4 w-4 text-red-600" />
+        </Button>
+      </div>
     ),
   },
 ];
