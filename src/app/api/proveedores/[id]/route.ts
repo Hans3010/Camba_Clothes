@@ -1,10 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { proveedorSchema } from "@/lib/validations/proveedor";
 
-// GET: Obtener un solo proveedor para llenar el formulario al editar
+// GET: Obtener los datos de UN solo proveedor (para el formulario de edición)
 export async function GET(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -21,45 +19,54 @@ export async function GET(
 
     return NextResponse.json(proveedor);
   } catch (error) {
-    return NextResponse.json({ error: "Error al obtener proveedor" }, { status: 500 });
+    return NextResponse.json({ error: "Error al buscar proveedor" }, { status: 500 });
   }
 }
 
-// PUT: Actualizar el proveedor en la base de datos
+// PUT: Actualizar un proveedor existente
 export async function PUT(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const session = await getServerSession(authOptions);
-    if (!session) return NextResponse.json({ error: "No autorizado" }, { status: 401 });
-
     const { id } = await params;
-    const numId = Number(id);
     const body = await req.json();
-
-    const result = proveedorSchema.safeParse(body);
-    if (!result.success) {
-      return NextResponse.json({ error: "Datos inválidos", details: result.error.flatten() }, { status: 400 });
-    }
-
-    const existe = await prisma.proveedor.findFirst({
-      where: {
-        nombreEmpresa: { equals: result.data.nombreEmpresa, mode: "insensitive" },
-        NOT: { id: numId },
-      },
-    });
-    if (existe) {
-      return NextResponse.json({ error: "Ya existe un proveedor con ese nombre de empresa" }, { status: 400 });
-    }
+    
+    // Validamos los datos recibidos
+    const validatedData = proveedorSchema.parse(body);
 
     const proveedorActualizado = await prisma.proveedor.update({
-      where: { id: numId },
-      data: result.data,
+      where: { id: Number(id) },
+      data: validatedData,
     });
 
     return NextResponse.json(proveedorActualizado);
   } catch (error) {
-    return NextResponse.json({ error: "Error al actualizar proveedor" }, { status: 500 });
+    return NextResponse.json(
+      { error: "Error al actualizar el proveedor" }, 
+      { status: 500 }
+    );
+  }
+}
+
+// DELETE: Eliminar un proveedor
+export async function DELETE(
+  req: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const { id } = await params;
+
+    await prisma.proveedor.delete({
+      where: { id: Number(id) },
+    });
+
+    return NextResponse.json({ message: "Proveedor eliminado con éxito" });
+  } catch (error) {
+    // Si falla, es probable que el proveedor tenga "hijos" (compras) en la DB
+    return NextResponse.json(
+      { error: "No se puede eliminar. El proveedor tiene registros asociados." }, 
+      { status: 400 }
+    );
   }
 }
