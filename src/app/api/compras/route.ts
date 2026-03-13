@@ -1,66 +1,103 @@
-import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
-import { compraSchema } from "@/lib/validations/compra";
+import { NextRequest, NextResponse } from "next/server"
+import { getServerSession } from "next-auth"
+import { authOptions } from "@/lib/auth"
+import { prisma } from "@/lib/prisma"
+import { compraSchema } from "@/lib/validations/compra"
+
+export async function GET() {
+  const session = await getServerSession(authOptions)
+  if (!session) return NextResponse.json({ error: "No autorizado" }, { status: 401 })
+  if (session.user.rol !== "ADMIN") return NextResponse.json({ error: "Acceso denegado" }, { status: 403 })
+
+  try {
+    const compras = await prisma.compra.findMany({
+      include: {
+        proveedor: { select: { nombreEmpresa: true } },
+        usuario: { select: { usuario: true } },
+        detalles: {
+          include: { producto: { select: { nombreProducto: true } } },
+        },
+      },
+      orderBy: { fecha: "desc" },
+    })
+    return NextResponse.json(compras)
+  } catch {
+    return NextResponse.json({ error: "Error al obtener compras" }, { status: 500 })
+  }
+}
 
 export async function POST(req: NextRequest) {
+  const session = await getServerSession(authOptions)
+  if (!session) return NextResponse.json({ error: "No autorizado" }, { status: 401 })
+  if (session.user.rol !== "ADMIN") return NextResponse.json({ error: "Acceso denegado" }, { status: 403 })
+
   try {
-    const body = await req.json();
-    const validated = compraSchema.parse(body);
-
-    let producto;
-
-    if (validated.productoId) {
-      // Buscar producto existente
-      const productoExistente = await prisma.producto.findUnique({
-        where: { id: validated.productoId },
-      });
-
-      producto = await prisma.producto.update({
-        where: { id: validated.productoId },
-        data: {
-          stock: (productoExistente?.stock ?? 0) + validated.cantidad,
-          precioVenta: validated.precioUnitario, // usamos el campo correcto
-        },
-      });
-    } else {
-      // Crear producto nuevo con los atributos de tu tabla
-      producto = await prisma.producto.create({
-        data: {
-          idCategoriaProducto: 1, // puedes ajustar según tu lógica
-          nombreProducto: validated.nombreProducto!,
-          precioVenta: validated.precioUnitario,
-          marca: "GENERICA", // puedes capturarlo en el form si quieres
-          talla: "N/A",
-          color: "N/A",
-          // 👇 temporada debe ser un valor válido del enum o undefined
-          temporada: undefined, 
-          costo: validated.precioUnitario,
-          margen: 0,
-          stock: validated.cantidad,
-          stockMinimo: 1,
-          estado: "ACTIVO", // este sí es válido en tu enum EstadoGeneral
-        },
-      });
+    const body = await req.json()
+    const result = compraSchema.safeParse(body)
+    if (!result.success) {
+      return NextResponse.json({ error: result.error.flatten() }, { status: 400 })
     }
 
-    // Crear compra (sin productoId porque tu modelo Compra no lo tiene)
-    const compra = await prisma.compra.create({
-      data: {
-        idUsuario: validated.idUsuario,
-        idProveedor: validated.idProveedor,
-        fecha: validated.fecha,
-        numeroDocumento: validated.numeroDocumento,
-        tipoDocumento: validated.tipoDocumento,
-        subtotal: validated.subtotal,
-        descuento: validated.descuento,
-        total: validated.total,
-        estado: validated.estado,
-      },
-    });
+    const { idProveedor, numeroDocumento, tipoDocumento, descuento, items } = result.data
 
-    return NextResponse.json({ compra, producto }, { status: 201 });
+    // Calcular totales
+    const subtotal = items.reduce((acc, item) => acc + item.precioCompra * item.cantidad, 0)
+    const total = subtotal - (descuento ?? 0)
+
+    const compra = await prisma.$transaction(async (tx) => {
+      // 1. Crear la cabecera de la compra
+      const nuevaCompra = await tx.compra.create({
+        data: {
+          idUsuario: session.user.id,
+          idProveedor,
+          numeroDocumento: numeroDocumento ?? null,
+          tipoDocumento: tipoDocumento ?? null,
+          subtotal,
+          descuento: descuento ?? 0,
+          total,
+        },
+      })
+
+      // 2. Por cada item: detalle + stock + movimiento
+      for (const item of items) {
+        const subtotalItem = item.precioCompra * item.cantidad
+
+        await tx.detalleCompra.create({
+          data: {
+            idCompra: nuevaCompra.id,
+            idProducto: item.idProducto,
+            cantidad: item.cantidad,
+            precioCompra: item.precioCompra,
+            subtotal: subtotalItem,
+          },
+        })
+
+        await tx.producto.update({
+          where: { id: item.idProducto },
+          data: {
+            stock: { increment: item.cantidad },
+            costo: item.precioCompra,
+          },
+        })
+
+        await tx.movimientoInventario.create({
+          data: {
+            idProducto: item.idProducto,
+            idUsuario: session.user.id,
+            tipo: "ENTRADA",
+            origen: "COMPRA",
+            cantidad: item.cantidad,
+            descripcion: `Compra #${nuevaCompra.id} — Proveedor ID ${idProveedor}`,
+          },
+        })
+      }
+
+      return nuevaCompra
+    })
+
+    return NextResponse.json(compra, { status: 201 })
   } catch (error) {
-    console.error(error);
-    return NextResponse.json({ error: "Error al crear compra" }, { status: 500 });
+    console.error(error)
+    return NextResponse.json({ error: "Error al registrar compra" }, { status: 500 })
   }
 }
