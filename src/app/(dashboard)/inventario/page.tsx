@@ -129,11 +129,11 @@ export default function InventarioPage() {
     const data = await res.json()
     if (Array.isArray(data)) {
       setProductos(
-        data.map((p: any) => ({
+        data.map((p: { id: number; nombreProducto: string; talla?: string; color?: string; marca?: string; stock: number; stockMinimo: number; costo: number; precioVenta: number }) => ({
           id: p.id,
           nombreProducto: p.nombreProducto,
-          talla: p.talla,
-          color: p.color,
+          talla: p.talla ?? "",
+          color: p.color ?? "",
           marca: p.marca ?? "",
           stock: p.stock,
           stockMinimo: p.stockMinimo,

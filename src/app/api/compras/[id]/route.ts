@@ -3,12 +3,13 @@ import { prisma } from "@/lib/prisma";
 import { compraSchema } from "@/lib/validations/compra";
 
 export async function GET(
-  req: NextRequest,
-  { params }: { params: { id: string } }
+  _req: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const compra = await prisma.compra.findUnique({
-      where: { id: Number(params.id) },
+      where: { id: Number(id) },
       include: { proveedor: true, usuario: true },
     });
 
@@ -25,24 +26,20 @@ export async function GET(
 
 export async function PUT(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const body = await req.json();
     const validated = compraSchema.parse(body);
 
     const compra = await prisma.compra.update({
-      where: { id: Number(params.id) },
+      where: { id: Number(id) },
       data: {
-        idUsuario: validated.idUsuario,
         idProveedor: validated.idProveedor,
-        fecha: validated.fecha,
         numeroDocumento: validated.numeroDocumento,
         tipoDocumento: validated.tipoDocumento,
-        subtotal: validated.subtotal,
         descuento: validated.descuento,
-        total: validated.total,
-        estado: validated.estado,
       },
     });
 
@@ -54,12 +51,13 @@ export async function PUT(
 }
 
 export async function DELETE(
-  req: NextRequest,
-  { params }: { params: { id: string } }
+  _req: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     await prisma.compra.delete({
-      where: { id: Number(params.id) },
+      where: { id: Number(id) },
     });
 
     return NextResponse.json({ message: "Compra eliminada" });

@@ -11,12 +11,13 @@ const detalleCompraSchema = z.object({
 });
 
 export async function GET(
-  req: NextRequest,
-  { params }: { params: { id: string } }
+  _req: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const detalle = await prisma.detalleCompra.findUnique({
-      where: { id: Number(params.id) },
+      where: { id: Number(id) },
       include: { producto: true, compra: true },
     });
 
@@ -33,14 +34,15 @@ export async function GET(
 
 export async function PUT(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const body = await req.json();
     const validated = detalleCompraSchema.parse(body);
 
     const detalle = await prisma.detalleCompra.update({
-      where: { id: Number(params.id) },
+      where: { id: Number(id) },
       data: {
         idCompra: validated.idCompra,
         idProducto: validated.idProducto,
@@ -58,12 +60,13 @@ export async function PUT(
 }
 
 export async function DELETE(
-  req: NextRequest,
-  { params }: { params: { id: string } }
+  _req: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     await prisma.detalleCompra.delete({
-      where: { id: Number(params.id) },
+      where: { id: Number(id) },
     });
 
     return NextResponse.json({ message: "Detalle eliminado" });
