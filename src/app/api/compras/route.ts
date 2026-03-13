@@ -40,12 +40,10 @@ export async function POST(req: NextRequest) {
 
     const { idProveedor, numeroDocumento, tipoDocumento, descuento, items } = result.data
 
-    // Calcular totales
     const subtotal = items.reduce((acc, item) => acc + item.precioCompra * item.cantidad, 0)
     const total = subtotal - (descuento ?? 0)
 
     const compra = await prisma.$transaction(async (tx) => {
-      // 1. Crear la cabecera de la compra
       const nuevaCompra = await tx.compra.create({
         data: {
           idUsuario: session.user.id,
@@ -58,7 +56,6 @@ export async function POST(req: NextRequest) {
         },
       })
 
-      // 2. Por cada item: detalle + stock + movimiento
       for (const item of items) {
         const subtotalItem = item.precioCompra * item.cantidad
 

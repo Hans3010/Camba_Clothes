@@ -33,7 +33,6 @@ import {
 } from "@/components/ui/table"
 import { Plus, Users, Star, ShoppingBag, UserCheck } from "lucide-react"
 
-// ─── Types ─────────────────────────────────────────────────────────────────
 
 type Segmento = "FRECUENTE" | "OCASIONAL" | "NUEVO"
 
@@ -51,7 +50,6 @@ interface ClienteSegmento {
   segmento: Segmento
 }
 
-// ─── Helpers ───────────────────────────────────────────────────────────────
 
 const segmentoBadge: Record<Segmento, { label: string; className: string }> = {
   FRECUENTE: { label: "Frecuente", className: "bg-green-600" },
@@ -63,17 +61,14 @@ function fmt(n: number) {
   return `Bs. ${n.toLocaleString("es-BO", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
 }
 
-// ─── Page ──────────────────────────────────────────────────────────────────
 
 export default function ClientesPage() {
-  // Directorio
   const [clientes, setClientes] = useState<ClienteRow[]>([])
   const [loading, setLoading] = useState(true)
   const [createOpen, setCreateOpen] = useState(false)
   const [editingId, setEditingId] = useState<number | null>(null)
   const [editOpen, setEditOpen] = useState(false)
 
-  // Segmentación
   const [segmentacion, setSegmentacion] = useState<ClienteSegmento[]>([])
   const [loadingSeg, setLoadingSeg] = useState(true)
   const [filterSegmento, setFilterSegmento] = useState<string>("all")
@@ -136,7 +131,6 @@ export default function ClientesPage() {
     [handleOpenEdit, handleToggleEstado]
   )
 
-  // Segmentación filtrada
   const filteredSeg = useMemo(() => {
     return segmentacion.filter((c) => {
       const matchSeg = filterSegmento === "all" || c.segmento === filterSegmento
@@ -149,7 +143,6 @@ export default function ClientesPage() {
     })
   }, [segmentacion, filterSegmento, searchSeg])
 
-  // KPIs
   const stats = useMemo(() => {
     const frecuentes = segmentacion.filter((c) => c.segmento === "FRECUENTE").length
     const ocasionales = segmentacion.filter((c) => c.segmento === "OCASIONAL").length
@@ -185,7 +178,6 @@ export default function ClientesPage() {
           </TabsTrigger>
         </TabsList>
 
-        {/* ── Tab: Directorio ── */}
         <TabsContent value="directorio" className="mt-4">
           {loading ? (
             <p className="text-sm text-muted-foreground py-8 text-center">Cargando clientes...</p>
@@ -194,9 +186,7 @@ export default function ClientesPage() {
           )}
         </TabsContent>
 
-        {/* ── Tab: Segmentación ── */}
         <TabsContent value="segmentacion" className="mt-4 space-y-4">
-          {/* KPIs */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
             <Card>
               <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
@@ -243,7 +233,6 @@ export default function ClientesPage() {
             </Card>
           </div>
 
-          {/* Criterio */}
           <div className="text-xs text-muted-foreground bg-muted/40 border rounded-md px-4 py-2">
             <strong>Criterio de clasificación:</strong>{" "}
             <span className="text-green-700 font-medium">Frecuente</span> ≥ 5 ventas completadas ·{" "}
@@ -251,7 +240,6 @@ export default function ClientesPage() {
             <span className="font-medium">Nuevo</span> sin ventas registradas
           </div>
 
-          {/* Filtros */}
           <div className="flex gap-3 flex-wrap">
             <Input
               placeholder="Buscar cliente o teléfono..."
@@ -272,7 +260,6 @@ export default function ClientesPage() {
             </Select>
           </div>
 
-          {/* Tabla */}
           {loadingSeg ? (
             <p className="text-sm text-muted-foreground py-8 text-center">Cargando segmentación...</p>
           ) : (
@@ -340,7 +327,6 @@ export default function ClientesPage() {
         </TabsContent>
       </Tabs>
 
-      {/* Dialog: Crear */}
       <Dialog open={createOpen} onOpenChange={setCreateOpen}>
         <DialogContent className="max-w-lg">
           <DialogHeader>
@@ -357,7 +343,6 @@ export default function ClientesPage() {
         </DialogContent>
       </Dialog>
 
-      {/* Dialog: Editar */}
       <Dialog
         open={editOpen}
         onOpenChange={(open) => {

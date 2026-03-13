@@ -25,13 +25,11 @@ export async function POST(req: NextRequest) {
 
     const { idProducto, cantidad, motivo } = result.data
 
-    // Validate product exists
     const producto = await prisma.producto.findUnique({ where: { id: idProducto } })
     if (!producto) {
       return NextResponse.json({ error: "Producto no encontrado" }, { status: 404 })
     }
 
-    // Prevent negative stock
     const nuevoStock = producto.stock + cantidad
     if (nuevoStock < 0) {
       return NextResponse.json(

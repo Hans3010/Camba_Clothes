@@ -55,7 +55,6 @@ import {
   ChevronsUpDown,
 } from "lucide-react"
 
-// ─── Types ─────────────────────────────────────────────────────────────────
 
 interface Movimiento {
   id: number
@@ -82,7 +81,6 @@ interface ProductoValuacion {
   valorVenta: number   // stock * precioVenta
 }
 
-// ─── Helpers ───────────────────────────────────────────────────────────────
 
 const tipoColor: Record<string, string> = {
   ENTRADA: "bg-green-600",
@@ -101,22 +99,18 @@ function fmt(n: number) {
   return `Bs. ${n.toLocaleString("es-BO", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
 }
 
-// ─── Page ──────────────────────────────────────────────────────────────────
 
 export default function InventarioPage() {
   const { data: session } = useSession()
   const isAdmin = session?.user?.rol === "ADMIN"
 
-  // Movimientos
   const [movimientos, setMovimientos] = useState<Movimiento[]>([])
   const [searchMov, setSearchMov] = useState("")
   const [filterTipo, setFilterTipo] = useState<string>("all")
 
-  // Valoración
   const [productos, setProductos] = useState<ProductoValuacion[]>([])
   const [searchVal, setSearchVal] = useState("")
 
-  // Ajuste manual
   const [ajusteOpen, setAjusteOpen] = useState(false)
   const [ajusteProductoId, setAjusteProductoId] = useState<number | "">("")
   const [ajusteComboOpen, setAjusteComboOpen] = useState(false)
@@ -157,7 +151,6 @@ export default function InventarioPage() {
     fetchProductos()
   }, [fetchMovimientos, fetchProductos])
 
-  // ── Movimientos filtrados ──────────────────────────────────────────────
   const filteredMov = useMemo(
     () =>
       movimientos.filter((m) => {
@@ -170,7 +163,6 @@ export default function InventarioPage() {
     [movimientos, searchMov, filterTipo]
   )
 
-  // ── Valoración filtrada ────────────────────────────────────────────────
   const filteredVal = useMemo(
     () =>
       productos.filter((p) =>
@@ -196,7 +188,6 @@ export default function InventarioPage() {
     [productos]
   )
 
-  // ── Ajuste manual ──────────────────────────────────────────────────────
   const productoAjuste = productos.find((p) => p.id === ajusteProductoId)
 
   const handleAjuste = async () => {
@@ -242,7 +233,6 @@ export default function InventarioPage() {
     }
   }
 
-  // ─── Render ──────────────────────────────────────────────────────────────
 
   return (
     <div className="space-y-6">
@@ -261,7 +251,6 @@ export default function InventarioPage() {
         )}
       </div>
 
-      {/* ── KPIs valoración ── */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
@@ -316,7 +305,6 @@ export default function InventarioPage() {
         </Card>
       </div>
 
-      {/* ── Tabs: Valoración / Movimientos ── */}
       <Tabs defaultValue="valoracion">
         <TabsList>
           <TabsTrigger value="valoracion">
@@ -329,7 +317,6 @@ export default function InventarioPage() {
           </TabsTrigger>
         </TabsList>
 
-        {/* ── Tab: Valoración ── */}
         <TabsContent value="valoracion" className="mt-4 space-y-3">
           <Input
             placeholder="Buscar producto..."
@@ -403,7 +390,6 @@ export default function InventarioPage() {
               </TableBody>
             </Table>
           </div>
-          {/* Fila de totales */}
           <div className="flex justify-end gap-8 text-sm px-2 pt-1 border-t">
             <div className="text-right">
               <p className="text-muted-foreground text-xs">Total al costo</p>
@@ -418,7 +404,6 @@ export default function InventarioPage() {
           </div>
         </TabsContent>
 
-        {/* ── Tab: Movimientos ── */}
         <TabsContent value="movimientos" className="mt-4 space-y-3">
           <div className="flex gap-3 flex-wrap">
             <Input
@@ -495,7 +480,6 @@ export default function InventarioPage() {
         </TabsContent>
       </Tabs>
 
-      {/* ── Dialog: Ajuste manual ── */}
       {isAdmin && (
         <Dialog open={ajusteOpen} onOpenChange={handleCloseAjuste}>
           <DialogContent className="max-w-md">
@@ -504,7 +488,6 @@ export default function InventarioPage() {
             </DialogHeader>
 
             <div className="space-y-4 py-2">
-              {/* Producto selector con búsqueda */}
               <div className="space-y-1.5">
                 <Label>
                   Producto <span className="text-destructive">*</span>
@@ -568,7 +551,6 @@ export default function InventarioPage() {
                 )}
               </div>
 
-              {/* Cantidad */}
               <div className="space-y-1.5">
                 <Label>
                   Cantidad <span className="text-destructive">*</span>
@@ -598,7 +580,6 @@ export default function InventarioPage() {
                 )}
               </div>
 
-              {/* Motivo */}
               <div className="space-y-1.5">
                 <Label>
                   Motivo del ajuste <span className="text-destructive">*</span>

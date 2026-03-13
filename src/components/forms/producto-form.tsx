@@ -41,7 +41,6 @@ export default function ProductoForm({ defaultValues, onSubmit }: ProductoFormPr
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
 
-        {/* Fila 1: Categoría (ancha) + Estado */}
         <div className="grid grid-cols-3 gap-4">
           <div className="col-span-2">
             <FormField
@@ -91,7 +90,6 @@ export default function ProductoForm({ defaultValues, onSubmit }: ProductoFormPr
           />
         </div>
 
-        {/* Fila 2: Nombre (ancho completo) */}
         <FormField
           control={form.control}
           name="nombreProducto"
@@ -104,7 +102,6 @@ export default function ProductoForm({ defaultValues, onSubmit }: ProductoFormPr
           )}
         />
 
-        {/* Fila 3: Marca + Temporada */}
         <div className="grid grid-cols-2 gap-4">
           <FormField
             control={form.control}
@@ -141,7 +138,6 @@ export default function ProductoForm({ defaultValues, onSubmit }: ProductoFormPr
           />
         </div>
 
-        {/* Fila 4: Talla + Color */}
         <div className="grid grid-cols-2 gap-4">
           <FormField
             control={form.control}
@@ -169,7 +165,6 @@ export default function ProductoForm({ defaultValues, onSubmit }: ProductoFormPr
 
         <Separator />
 
-        {/* Fila 5: Precio + Costo + Stock mínimo */}
         <div className="grid grid-cols-3 gap-4">
           <FormField
             control={form.control}
@@ -218,7 +213,6 @@ export default function ProductoForm({ defaultValues, onSubmit }: ProductoFormPr
           />
         </div>
 
-        {/* Info de stock y margen (solo en modo edición) */}
         {defaultValues?.stock !== undefined && (
           <div className="flex gap-6 text-sm text-muted-foreground bg-muted/40 rounded-md px-3 py-2">
             <span>Stock actual: <strong className="text-foreground">{defaultValues.stock}</strong></span>

@@ -63,7 +63,6 @@ export function ResumenCaja({ sesion }: ResumenCajaProps) {
 
   return (
     <div className="space-y-6">
-      {/* KPI cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -123,7 +122,6 @@ export function ResumenCaja({ sesion }: ResumenCajaProps) {
         </Card>
       </div>
 
-      {/* Close caja */}
       <AlertDialog>
         <AlertDialogTrigger asChild>
           <Button variant="destructive">Cerrar Caja</Button>

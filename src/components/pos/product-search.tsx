@@ -49,7 +49,6 @@ export default function ProductSearch({ onAddToCart }: Props) {
 
   return (
     <div className="flex flex-col h-full gap-3">
-      {/* Search input */}
       <div className="relative shrink-0">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
         <Input
@@ -61,7 +60,6 @@ export default function ProductSearch({ onAddToCart }: Props) {
         />
       </div>
 
-      {/* Product grid */}
       {loading ? (
         <div className="grid grid-cols-2 xl:grid-cols-3 gap-3">
           {Array.from({ length: 9 }).map((_, i) => (

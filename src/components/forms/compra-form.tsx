@@ -62,7 +62,6 @@ export default function CompraForm({ proveedores, productos, onSuccess }: Compra
   const [items, setItems] = useState<ItemCarrito[]>([])
   const [loading, setLoading] = useState(false)
 
-  // Combobox state
   const [openCombo, setOpenCombo] = useState(false)
   const [productoSelId, setProductoSelId] = useState<number | "">("")
   const [cantidadSel, setCantidadSel] = useState(1)
@@ -173,7 +172,6 @@ export default function CompraForm({ proveedores, productos, onSuccess }: Compra
 
   return (
     <div className="space-y-6">
-      {/* Datos de la compra */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <div className="space-y-1.5">
           <Label>Proveedor <span className="text-destructive">*</span></Label>
@@ -213,7 +211,6 @@ export default function CompraForm({ proveedores, productos, onSuccess }: Compra
 
       <Separator />
 
-      {/* Selector de producto con búsqueda */}
       <div>
         <p className="text-sm font-medium mb-3">Agregar productos a la compra</p>
         <div className="grid grid-cols-1 sm:grid-cols-4 gap-3 items-end">
@@ -292,7 +289,6 @@ export default function CompraForm({ proveedores, productos, onSuccess }: Compra
         </div>
       </div>
 
-      {/* Tabla de items */}
       {items.length > 0 && (
         <>
           <div className="border rounded-lg overflow-hidden">
@@ -347,7 +343,6 @@ export default function CompraForm({ proveedores, productos, onSuccess }: Compra
             </table>
           </div>
 
-          {/* Totales */}
           <div className="flex flex-col items-end gap-2 text-sm">
             <div className="flex items-center gap-8">
               <span className="text-muted-foreground">Subtotal</span>

@@ -10,7 +10,6 @@ const detalleCompraSchema = z.object({
   subtotal: z.coerce.number().positive("El subtotal debe ser mayor a 0"),
 });
 
-// Obtener detalle por ID
 export async function GET(
   req: NextRequest,
   { params }: { params: { id: string } }
@@ -32,7 +31,6 @@ export async function GET(
   }
 }
 
-// Actualizar detalle por ID
 export async function PUT(
   req: NextRequest,
   { params }: { params: { id: string } }
@@ -59,14 +57,13 @@ export async function PUT(
   }
 }
 
-// Eliminar detalle por ID
 export async function DELETE(
   req: NextRequest,
   { params }: { params: { id: string } }
 ) {
   try {
     await prisma.detalleCompra.delete({
-      where: { id: Number(params.id) }, // 👈 usamos el id único
+      where: { id: Number(params.id) },
     });
 
     return NextResponse.json({ message: "Detalle eliminado" });

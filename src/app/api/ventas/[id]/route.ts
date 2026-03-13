@@ -33,7 +33,6 @@ export async function PATCH(
     return NextResponse.json({ error: result.error.flatten() }, { status: 400 })
   }
 
-  // Obtener la venta con sus detalles
   const venta = await prisma.venta.findUnique({
     where: { id: ventaId },
     include: { detalles: true },
@@ -46,7 +45,6 @@ export async function PATCH(
     return NextResponse.json({ error: "La venta ya está anulada" }, { status: 409 })
   }
 
-  // Anular en transacción atómica: actualizar venta + restaurar stock + registrar movimientos
   const ventaAnulada = await prisma.$transaction(async (tx) => {
     const updated = await tx.venta.update({
       where: { id: ventaId },
@@ -57,13 +55,11 @@ export async function PATCH(
     })
 
     for (const detalle of venta.detalles) {
-      // Restaurar stock
       await tx.producto.update({
         where: { id: detalle.idProducto },
         data: { stock: { increment: detalle.cantidad } },
       })
 
-      // Registrar movimiento de devolución
       await tx.movimientoInventario.create({
         data: {
           idProducto: detalle.idProducto,

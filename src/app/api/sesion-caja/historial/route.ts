@@ -21,13 +21,11 @@ export async function GET() {
     take: 100,
   })
 
-  // Serializar Decimal y calcular totales por sesión
   const data = sesiones.map((s) => {
     const ventasCompletadas = s.ventas.filter((v) => v.estado === "COMPLETADA")
     const ventasAnuladas = s.ventas.filter((v) => v.estado === "ANULADA")
     const totalVendido = ventasCompletadas.reduce((acc, v) => acc + Number(v.total), 0)
 
-    // Duración en minutos
     let duracionMin: number | null = null
     if (s.horaCierre) {
       duracionMin = Math.round(

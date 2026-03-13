@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { z } from "zod";
 
-// Validación con Zod
 const detalleCompraSchema = z.object({
   id: z.number().optional(),
   idCompra: z.coerce.number().int().positive("Selecciona una compra"),
@@ -12,7 +11,6 @@ const detalleCompraSchema = z.object({
   subtotal: z.coerce.number().positive("El subtotal debe ser mayor a 0"),
 });
 
-// Listar todos los detalles de compra
 export async function GET() {
   try {
     const detalles = await prisma.detalleCompra.findMany({
@@ -26,7 +24,6 @@ export async function GET() {
   }
 }
 
-// Crear un nuevo detalle de compra
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();

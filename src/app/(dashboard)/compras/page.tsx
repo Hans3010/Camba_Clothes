@@ -36,7 +36,6 @@ export default function ComprasPage() {
   const [compras, setCompras] = useState<CompraRow[]>([])
   const [loadingCompras, setLoadingCompras] = useState(true)
 
-  // Dialog detalle
   const [detailCompra, setDetailCompra] = useState<CompraRow | null>(null)
   const [detailOpen, setDetailOpen] = useState(false)
 
@@ -93,7 +92,6 @@ export default function ComprasPage() {
     <div className="space-y-6">
       <h1 className="text-2xl font-bold">Compras</h1>
 
-      {/* ── Formulario nueva compra ── */}
       <div className="border rounded-lg p-6">
         <p className="text-sm font-semibold text-muted-foreground uppercase tracking-wide mb-4">
           Registrar nueva compra
@@ -107,11 +105,9 @@ export default function ComprasPage() {
 
       <Separator />
 
-      {/* ── Historial ── */}
       <div className="space-y-4">
         <h2 className="text-lg font-semibold">Historial de Compras</h2>
 
-        {/* Tarjetas resumen */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
@@ -153,7 +149,6 @@ export default function ComprasPage() {
           </Card>
         </div>
 
-        {/* Tabla */}
         {loadingCompras ? (
           <p className="text-sm text-muted-foreground py-8 text-center">Cargando historial...</p>
         ) : compras.length === 0 ? (
@@ -166,7 +161,6 @@ export default function ComprasPage() {
         )}
       </div>
 
-      {/* ── Dialog: Detalle de compra ── */}
       <Dialog
         open={detailOpen}
         onOpenChange={(open) => {
@@ -181,7 +175,6 @@ export default function ComprasPage() {
 
           {detailCompra && (
             <div className="space-y-4">
-              {/* Info general */}
               <div className="grid grid-cols-2 gap-x-6 gap-y-3 text-sm">
                 <div>
                   <p className="text-muted-foreground text-xs uppercase tracking-wide">Fecha</p>
@@ -210,7 +203,6 @@ export default function ComprasPage() {
 
               <Separator />
 
-              {/* Productos */}
               <div>
                 <p className="font-medium text-sm mb-3">
                   Productos ({detailCompra.detalles.length})
@@ -240,7 +232,6 @@ export default function ComprasPage() {
 
               <Separator />
 
-              {/* Totales */}
               <div className="space-y-1 text-sm">
                 <div className="flex justify-between text-muted-foreground">
                   <span>Subtotal</span>
@@ -258,7 +249,6 @@ export default function ComprasPage() {
                 </div>
               </div>
 
-              {/* Badge total unidades */}
               <Badge variant="secondary" className="w-full justify-center py-1">
                 {detailCompra.detalles.reduce((acc, d) => acc + d.cantidad, 0)} unidades en total
               </Badge>

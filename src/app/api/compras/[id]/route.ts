@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { compraSchema } from "@/lib/validations/compra";
 
-// Obtener una compra por ID
 export async function GET(
   req: NextRequest,
   { params }: { params: { id: string } }
@@ -24,7 +23,6 @@ export async function GET(
   }
 }
 
-// Actualizar una compra por ID
 export async function PUT(
   req: NextRequest,
   { params }: { params: { id: string } }
@@ -55,7 +53,6 @@ export async function PUT(
   }
 }
 
-// Eliminar una compra por ID
 export async function DELETE(
   req: NextRequest,
   { params }: { params: { id: string } }

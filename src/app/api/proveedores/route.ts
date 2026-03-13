@@ -2,11 +2,10 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { proveedorSchema } from "@/lib/validations/proveedor";
 
-// GET: Listar todos los proveedores
 export async function GET() {
   try {
     const proveedores = await prisma.proveedor.findMany({
-      orderBy: { id: "desc" }, // Los más nuevos primero
+      orderBy: { id: "desc" },
     });
     return NextResponse.json(proveedores);
   } catch (error) {
@@ -17,12 +16,9 @@ export async function GET() {
   }
 }
 
-// POST: Registrar un nuevo proveedor
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    
-    // Validamos los datos con Zod antes de tocar la base de datos
     const validatedData = proveedorSchema.parse(body);
 
     const nuevoProveedor = await prisma.proveedor.create({

@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { proveedorSchema } from "@/lib/validations/proveedor";
 
-// GET: Obtener los datos de UN solo proveedor (para el formulario de edición)
 export async function GET(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -23,7 +22,6 @@ export async function GET(
   }
 }
 
-// PUT: Actualizar un proveedor existente
 export async function PUT(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -31,8 +29,6 @@ export async function PUT(
   try {
     const { id } = await params;
     const body = await req.json();
-    
-    // Validamos los datos recibidos
     const validatedData = proveedorSchema.parse(body);
 
     const proveedorActualizado = await prisma.proveedor.update({
@@ -49,7 +45,6 @@ export async function PUT(
   }
 }
 
-// DELETE: Eliminar un proveedor
 export async function DELETE(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -63,7 +58,6 @@ export async function DELETE(
 
     return NextResponse.json({ message: "Proveedor eliminado con éxito" });
   } catch (error) {
-    // Si falla, es probable que el proveedor tenga "hijos" (compras) en la DB
     return NextResponse.json(
       { error: "No se puede eliminar. El proveedor tiene registros asociados." }, 
       { status: 400 }

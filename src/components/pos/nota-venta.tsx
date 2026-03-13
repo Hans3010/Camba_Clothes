@@ -279,10 +279,8 @@ export default function NotaVenta({ venta, onClose }: Props) {
 
   return (
     <div>
-      {/* ── Preview visual de la nota (pantalla) ── */}
       <div className="rounded-xl border border-gray-200 bg-white shadow-[0_2px_20px_rgba(0,0,0,0.10)] overflow-hidden max-h-[56vh] overflow-y-auto">
 
-        {/* Cabecera */}
         <div className="text-center py-4 px-5 bg-gray-50 border-b border-dashed">
           <p className="font-black text-[15px] tracking-[4px] uppercase font-mono">
             CambaClothes
@@ -296,7 +294,6 @@ export default function NotaVenta({ venta, onClose }: Props) {
         </div>
 
         <div className="font-mono text-[11px] px-5 py-3">
-          {/* Info general */}
           <div className="space-y-0.5 mb-3">
             {(
               [
@@ -315,7 +312,6 @@ export default function NotaVenta({ venta, onClose }: Props) {
 
           <div className="border-t border-dashed border-gray-300 my-2" />
 
-          {/* Cabecera de tabla */}
           <div className="grid grid-cols-[1fr_auto_auto_auto] gap-x-3 text-[9.5px] font-bold uppercase tracking-wide text-muted-foreground border-b border-gray-300 pb-1 mb-1">
             <span>Producto</span>
             <span className="text-center">Cant.</span>
@@ -323,7 +319,6 @@ export default function NotaVenta({ venta, onClose }: Props) {
             <span className="text-right">Total</span>
           </div>
 
-          {/* Items */}
           <div className="divide-y divide-dashed divide-gray-100">
             {venta.detalles.map((d) => (
               <div
@@ -349,7 +344,6 @@ export default function NotaVenta({ venta, onClose }: Props) {
 
           <div className="border-t border-dashed border-gray-300 my-2" />
 
-          {/* Totales */}
           <div className="space-y-0.5">
             <div className="flex justify-between text-muted-foreground">
               <span>Subtotal:</span>
@@ -366,14 +360,12 @@ export default function NotaVenta({ venta, onClose }: Props) {
           </div>
         </div>
 
-        {/* Footer */}
         <div className="text-center font-mono text-[10px] text-muted-foreground bg-gray-50 border-t border-dashed py-3 px-4">
           <p className="font-semibold text-foreground text-[11px]">¡Gracias por su compra!</p>
           <p>Vuelva pronto · CambaClothes</p>
         </div>
       </div>
 
-      {/* Botones */}
       <div className="flex gap-2 mt-4">
         <Button variant="outline" className="flex-1" onClick={onClose}>
           Cerrar

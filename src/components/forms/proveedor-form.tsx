@@ -34,7 +34,6 @@ export const ProveedorForm = ({ initialId, onSuccess }: ProveedorFormProps) => {
         try {
           const res = await fetch(`/api/proveedores/${initialId}`);
           const data = await res.json();
-          // Sincronizamos los datos que vienen de la API con tu esquema
           form.reset({
             nombreEmpresa: data.nombreEmpresa || "",
             representante: data.representante || "",
@@ -83,7 +82,7 @@ export const ProveedorForm = ({ initialId, onSuccess }: ProveedorFormProps) => {
         
         <FormField
           control={form.control}
-          name="nombreEmpresa" // Coincide con tu esquema
+          name="nombreEmpresa"
           render={({ field }) => (
             <FormItem>
               <FormLabel>Nombre de la Empresa</FormLabel>
@@ -95,7 +94,7 @@ export const ProveedorForm = ({ initialId, onSuccess }: ProveedorFormProps) => {
 
         <FormField
           control={form.control}
-          name="representante" // Coincide con tu esquema
+          name="representante"
           render={({ field }) => (
             <FormItem>
               <FormLabel>Representante</FormLabel>

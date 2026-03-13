@@ -23,7 +23,6 @@ export function Header() {
 
   return (
     <header className="h-14 border-b bg-background flex items-center justify-between px-4 shrink-0">
-      {/* Mobile: hamburger + brand */}
       <div className="flex items-center gap-3">
         <Sheet>
           <SheetTrigger asChild>
@@ -38,7 +37,6 @@ export function Header() {
         </Sheet>
       </div>
 
-      {/* Right: user menu */}
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <Button variant="ghost" className="flex items-center gap-2 h-9 px-2">

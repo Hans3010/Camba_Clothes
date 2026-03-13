@@ -41,11 +41,9 @@ const navEntries: NavEntry[] = [
   { kind: "link", href: "/pos",  label: "Punto de Venta", icon: ShoppingCart },
   { kind: "link", href: "/caja", label: "Caja",           icon: Vault },
 
-  // VENDEDOR: sus propias ventas y sesiones
   { kind: "link", href: "/ventas",   label: "Mis Ventas",   icon: Receipt,   roles: ["VENDEDOR"] },
   { kind: "link", href: "/reportes", label: "Mis Sesiones", icon: BarChart3, roles: ["VENDEDOR"] },
 
-  // ADMIN: historial completo en sección propia
   { kind: "section", label: "Registros", roles: ["ADMIN"] },
   { kind: "link", href: "/ventas", label: "Historial Ventas", icon: Receipt, roles: ["ADMIN"] },
 
@@ -73,7 +71,6 @@ function NavContent() {
 
   const visible = navEntries.filter((entry) => !entry.roles || entry.roles.includes(rol))
 
-  // Eliminar secciones que no tienen links visibles a continuación
   const filtered: NavEntry[] = []
   for (let i = 0; i < visible.length; i++) {
     const entry = visible[i]
