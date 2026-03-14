@@ -30,10 +30,8 @@ export default function ProductosPage() {
   const [filterMarca, setFilterMarca] = useState("all")
   const [filterTalla, setFilterTalla] = useState("all")
 
-  // Dialog crear
   const [createOpen, setCreateOpen] = useState(false)
 
-  // Dialog editar
   const [editOpen, setEditOpen] = useState(false)
   const [editingProducto, setEditingProducto] = useState<ProductoRow | null>(null)
 
@@ -129,7 +127,6 @@ export default function ProductosPage() {
     [handleToggleEstado, handleOpenEdit]
   )
 
-  // Opciones únicas para los filtros
   const categorias = useMemo(() =>
     [...new Set(productos.map((p) => p.categoria?.nombreCategoria).filter(Boolean))].sort(),
     [productos]
@@ -188,7 +185,6 @@ export default function ProductosPage() {
         </Dialog>
       </div>
 
-      {/* Filtros */}
       <div className="flex flex-wrap gap-3">
         <Select value={filterCategoria} onValueChange={setFilterCategoria}>
           <SelectTrigger className="w-44">
@@ -233,7 +229,6 @@ export default function ProductosPage() {
         <DataTable searchKey="nombreProducto" columns={columns} data={filtered} />
       )}
 
-      {/* Dialog editar — fuera del flujo normal para no rerenderizar la tabla */}
       <Dialog open={editOpen} onOpenChange={(open) => {
         setEditOpen(open)
         if (!open) setEditingProducto(null)

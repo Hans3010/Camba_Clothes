@@ -1,7 +1,6 @@
 import { withAuth } from "next-auth/middleware"
 import { NextResponse } from "next/server"
 
-// Rutas exclusivas para ADMIN
 const ADMIN_ROUTES = [
   "/compras",
   "/proveedores",
@@ -9,10 +8,6 @@ const ADMIN_ROUTES = [
   "/inventario",
   "/categoria",
 ]
-
-// Rutas accesibles por VENDEDOR también
-// /ventas  → VENDEDOR ve solo sus ventas, ADMIN ve todo el historial
-// /reportes → VENDEDOR ve sus sesiones, ADMIN ve reportes completos
 
 export default withAuth(
   function middleware(req) {

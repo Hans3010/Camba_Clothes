@@ -18,7 +18,6 @@ export default function PosPage() {
   const [sesionActiva, setSesionActiva] = useState<boolean | null>(null)
   const [checkoutOpen, setCheckoutOpen] = useState(false)
 
-  // Check if user has an open cash register session
   useEffect(() => {
     fetch("/api/sesion-caja")
       .then((r) => r.json())
@@ -72,7 +71,6 @@ export default function PosPage() {
 
   return (
     <div className="flex flex-col gap-4 h-[calc(100vh-9rem)]">
-      {/* Page header */}
       <div className="flex items-center gap-4 shrink-0">
         <h1 className="text-2xl font-bold">Punto de Venta</h1>
         {sesionActiva === false && (
@@ -91,16 +89,12 @@ export default function PosPage() {
         )}
       </div>
 
-      {/* Main POS layout */}
       <div className="flex gap-4 flex-1 min-h-0">
-        {/* LEFT PANEL — Product search + grid (60%) */}
         <div className="flex-[3] flex flex-col rounded-lg border bg-card p-4 overflow-hidden">
           <ProductSearch onAddToCart={addToCart} />
         </div>
 
-        {/* RIGHT PANEL — Cart + checkout (40%) */}
         <div className="flex-[2] flex flex-col rounded-lg border bg-card p-4 min-h-0">
-          {/* Cart header */}
           <div className="flex items-center gap-2 mb-3 shrink-0">
             <ShoppingCart className="h-5 w-5" />
             <h2 className="font-semibold">Carrito</h2>
@@ -111,12 +105,10 @@ export default function PosPage() {
             )}
           </div>
 
-          {/* Cart items (scrollable) */}
           <div className="flex-1 overflow-y-auto min-h-0">
             <Cart items={cart} onUpdateQuantity={updateQuantity} onRemove={removeItem} />
           </div>
 
-          {/* Footer: totals + confirm button */}
           <div className="mt-3 shrink-0 space-y-3">
             <Separator />
 
@@ -159,7 +151,6 @@ export default function PosPage() {
         </div>
       </div>
 
-      {/* Checkout dialog */}
       <CheckoutDialog
         open={checkoutOpen}
         onClose={() => setCheckoutOpen(false)}

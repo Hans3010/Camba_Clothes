@@ -28,7 +28,6 @@ export const createClientesColumns = (
   {
     id: "nombreCompleto",
     header: "Cliente",
-    // Incluye teléfono para que el buscador del DataTable también filtre por teléfono
     accessorFn: (row) =>
       `${row.apPaterno} ${row.apMaterno ?? ""} ${row.nombre} ${row.telefono}`.trim(),
     cell: ({ row }) => {

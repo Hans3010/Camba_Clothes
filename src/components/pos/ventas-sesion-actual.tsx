@@ -47,7 +47,6 @@ export function VentasSesionActual() {
 
   useEffect(() => {
     fetchVentas()
-    // Refresca cada 30 segundos para mostrar ventas nuevas del POS
     const interval = setInterval(fetchVentas, 30000)
     return () => clearInterval(interval)
   }, [fetchVentas])
@@ -137,7 +136,6 @@ export function VentasSesionActual() {
         </CardContent>
       </Card>
 
-      {/* Dialog: Detalle de venta */}
       <Dialog open={!!detailVenta} onOpenChange={(open) => !open && setDetailVenta(null)}>
         <DialogContent className="max-w-md max-h-[85vh] overflow-y-auto">
           <DialogHeader>

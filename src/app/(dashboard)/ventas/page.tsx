@@ -44,11 +44,9 @@ export default function VentasPage() {
   const [ventas, setVentas] = useState<VentaRow[]>([])
   const [loading, setLoading] = useState(true)
 
-  // Dialog: ver detalle
   const [detailVenta, setDetailVenta] = useState<VentaRow | null>(null)
   const [detailOpen, setDetailOpen] = useState(false)
 
-  // Dialog: anular venta
   const [anularVenta, setAnularVenta] = useState<VentaRow | null>(null)
   const [anularOpen, setAnularOpen] = useState(false)
   const [motivoAnulacion, setMotivoAnulacion] = useState("")
@@ -132,7 +130,6 @@ export default function VentasPage() {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
       <div>
         <h1 className="text-2xl font-bold">Historial de Ventas</h1>
         <p className="text-sm text-muted-foreground mt-1">
@@ -142,7 +139,6 @@ export default function VentasPage() {
         </p>
       </div>
 
-      {/* Tarjetas de resumen */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
@@ -190,7 +186,6 @@ export default function VentasPage() {
         </Card>
       </div>
 
-      {/* Tabla o estado vacío */}
       {loading ? (
         <p className="text-sm text-muted-foreground py-12 text-center">Cargando ventas...</p>
       ) : ventas.length === 0 ? (
@@ -209,7 +204,6 @@ export default function VentasPage() {
         <DataTable searchKey="cliente" columns={columns} data={ventas} />
       )}
 
-      {/* ── Dialog: Detalle de venta ── */}
       <Dialog
         open={detailOpen}
         onOpenChange={(open) => {
@@ -234,7 +228,6 @@ export default function VentasPage() {
 
           {detailVenta && (
             <div className="space-y-4">
-              {/* Info general */}
               <div className="grid grid-cols-2 gap-x-6 gap-y-3 text-sm">
                 <div>
                   <p className="text-muted-foreground text-xs uppercase tracking-wide">Fecha</p>
@@ -262,7 +255,6 @@ export default function VentasPage() {
                 </div>
               </div>
 
-              {/* Motivo de anulación */}
               {detailVenta.motivoAnulacion && (
                 <div className="bg-destructive/10 border border-destructive/20 rounded-md p-3 text-sm">
                   <p className="font-medium text-destructive mb-1">Motivo de anulación</p>
@@ -272,7 +264,6 @@ export default function VentasPage() {
 
               <Separator />
 
-              {/* Detalle de productos */}
               <div>
                 <p className="font-medium text-sm mb-3">
                   Productos ({detailVenta.detalles.length})
@@ -302,7 +293,6 @@ export default function VentasPage() {
 
               <Separator />
 
-              {/* Total */}
               <div className="flex justify-between items-center">
                 <span className="font-semibold">Total</span>
                 <span className="text-xl font-bold">
@@ -314,7 +304,6 @@ export default function VentasPage() {
         </DialogContent>
       </Dialog>
 
-      {/* ── AlertDialog: Confirmar anulación ── */}
       <AlertDialog open={anularOpen} onOpenChange={setAnularOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>

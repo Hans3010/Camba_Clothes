@@ -14,7 +14,6 @@ export async function GET(req: NextRequest) {
   const clientes = await prisma.cliente.findMany({
     where: q
       ? {
-          // Cuando se busca (POS/autocomplete), solo clientes activos
           estado: "ACTIVO",
           OR: [
             { nombre: { contains: q, mode: "insensitive" } },
@@ -23,7 +22,7 @@ export async function GET(req: NextRequest) {
             { telefono: { contains: q } },
           ],
         }
-      : {}, // Sin query: todos los clientes para la página de gestión
+      : {},
     take: q ? 20 : undefined,
     orderBy: [{ apPaterno: "asc" }, { nombre: "asc" }],
   })

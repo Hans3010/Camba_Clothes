@@ -26,7 +26,6 @@ export default async function CajaPage() {
     },
   })
 
-  // Serializar Decimal antes de pasar a Client Components
   const sesionData = sesionActiva
     ? {
         id: sesionActiva.id,
@@ -58,7 +57,6 @@ export default async function CajaPage() {
       {sesionData ? (
         <>
           <ResumenCaja sesion={sesionData} />
-          {/* Historial de ventas de la sesión actual — se refresca cada 30s */}
           <VentasSesionActual />
         </>
       ) : (

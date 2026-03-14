@@ -55,7 +55,6 @@ function useDebounce<T>(value: T, delay: number): T {
   return debounced
 }
 
-// ─── Fake QR Code (visual simulation) ───────────────────────────────────────
 function FakeQRCode({ size = 23, cell = 7 }: { size?: number; cell?: number }) {
   const pattern = useMemo(() => {
     let seed = 98765
@@ -68,7 +67,6 @@ function FakeQRCode({ size = 23, cell = 7 }: { size?: number; cell?: number }) {
       .fill(null)
       .map(() => Array(size).fill(null).map(() => rand() > 0.48))
 
-    // Finder pattern helper (top-left, top-right, bottom-left)
     const addFinder = (r0: number, c0: number) => {
       for (let r = 0; r < 7; r++) {
         for (let c = 0; c < 7; c++) {
@@ -105,7 +103,6 @@ function FakeQRCode({ size = 23, cell = 7 }: { size?: number; cell?: number }) {
   )
 }
 
-// ─── QR Payment Screen ───────────────────────────────────────────────────────
 function QRScreen({ amount, onPaid }: { amount: number; onPaid: () => void }) {
   const [countdown, setCountdown] = useState(3)
   const [paid, setPaid] = useState(false)
@@ -162,7 +159,6 @@ function QRScreen({ amount, onPaid }: { amount: number; onPaid: () => void }) {
   )
 }
 
-// ─── Main component ──────────────────────────────────────────────────────────
 type Props = {
   open: boolean
   onClose: () => void
@@ -173,14 +169,12 @@ type Props = {
 export default function CheckoutDialog({ open, onClose, cart, onSuccess }: Props) {
   const router = useRouter()
 
-  // Client search
   const [clienteQuery, setClienteQuery] = useState("")
   const [clienteResults, setClienteResults] = useState<Cliente[]>([])
   const [selectedCliente, setSelectedCliente] = useState<Cliente | null>(null)
   const [showDropdown, setShowDropdown] = useState(false)
   const debouncedClienteQuery = useDebounce(clienteQuery, 300)
 
-  // Quick create client
   const [createOpen, setCreateOpen] = useState(false)
   const [newCliente, setNewCliente] = useState({
     nombre: "",
@@ -190,18 +184,15 @@ export default function CheckoutDialog({ open, onClose, cart, onSuccess }: Props
   })
   const [creatingCliente, setCreatingCliente] = useState(false)
 
-  // Payment
   const [tiposPago, setTiposPago] = useState<TipoPago[]>([])
   const [selectedTipoPagoId, setSelectedTipoPagoId] = useState<number | null>(null)
 
-  // Flow control
   type Step = "form" | "qr"
   const [step, setStep] = useState<Step>("form")
   const [confirmOpen, setConfirmOpen] = useState(false)
   const [loading, setLoading] = useState(false)
   const [ventaCreada, setVentaCreada] = useState<VentaConDetalles | null>(null)
 
-  // Reset on open
   useEffect(() => {
     if (open) {
       setClienteQuery("")
@@ -216,7 +207,6 @@ export default function CheckoutDialog({ open, onClose, cart, onSuccess }: Props
     }
   }, [open])
 
-  // Load payment types
   useEffect(() => {
     if (!open) return
     fetch("/api/tipos-pago")
@@ -225,7 +215,6 @@ export default function CheckoutDialog({ open, onClose, cart, onSuccess }: Props
       .catch(() => {})
   }, [open])
 
-  // Client search
   useEffect(() => {
     if (!debouncedClienteQuery || debouncedClienteQuery.length < 2) {
       setClienteResults([])
@@ -242,7 +231,6 @@ export default function CheckoutDialog({ open, onClose, cart, onSuccess }: Props
 
   const selectedMetodo = tiposPago.find((tp) => tp.id === selectedTipoPagoId)?.tipoMetodo
 
-  // ── Validate before showing confirmation ──
   function handleClickConfirm() {
     if (!selectedCliente) {
       toast.error("Selecciona un cliente para continuar")
@@ -255,7 +243,6 @@ export default function CheckoutDialog({ open, onClose, cart, onSuccess }: Props
     setConfirmOpen(true)
   }
 
-  // ── After user confirms "¿Estás seguro?" ──
   function handleProceed() {
     setConfirmOpen(false)
     if (selectedMetodo === "QR") {
@@ -265,7 +252,6 @@ export default function CheckoutDialog({ open, onClose, cart, onSuccess }: Props
     }
   }
 
-  // ── API call to register the sale ──
   async function processVenta() {
     setLoading(true)
     try {
@@ -347,7 +333,6 @@ export default function CheckoutDialog({ open, onClose, cart, onSuccess }: Props
     onClose()
   }
 
-  // ── RECEIPT VIEW ──────────────────────────────────────────────────────────
   if (ventaCreada) {
     return (
       <Dialog open={open} onOpenChange={handleClose}>
@@ -364,7 +349,6 @@ export default function CheckoutDialog({ open, onClose, cart, onSuccess }: Props
     )
   }
 
-  // ── QR SCREEN ─────────────────────────────────────────────────────────────
   if (step === "qr") {
     return (
       <Dialog open={open} onOpenChange={handleClose}>
@@ -378,10 +362,8 @@ export default function CheckoutDialog({ open, onClose, cart, onSuccess }: Props
     )
   }
 
-  // ── CHECKOUT FORM VIEW ────────────────────────────────────────────────────
   return (
     <>
-      {/* AlertDialog: ¿Estás seguro? */}
       <AlertDialog open={confirmOpen} onOpenChange={setConfirmOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
@@ -429,14 +411,12 @@ export default function CheckoutDialog({ open, onClose, cart, onSuccess }: Props
         </AlertDialogContent>
       </AlertDialog>
 
-      {/* Main checkout dialog */}
       <Dialog open={open && !createOpen} onOpenChange={onClose}>
         <DialogContent className="max-w-lg">
           <DialogHeader>
             <DialogTitle>Confirmar Venta</DialogTitle>
           </DialogHeader>
 
-          {/* Order summary */}
           <div className="space-y-1 max-h-36 overflow-y-auto text-sm border rounded-lg p-3 bg-muted/30">
             {cart.map((item) => (
               <div key={item.id} className="flex justify-between gap-2">
@@ -462,7 +442,6 @@ export default function CheckoutDialog({ open, onClose, cart, onSuccess }: Props
 
           <Separator />
 
-          {/* Client selector */}
           <div className="space-y-2">
             <Label>Cliente</Label>
             {selectedCliente ? (
@@ -536,7 +515,6 @@ export default function CheckoutDialog({ open, onClose, cart, onSuccess }: Props
             )}
           </div>
 
-          {/* Payment method */}
           <div className="space-y-2">
             <Label>Método de pago</Label>
             <div className="flex gap-2">
@@ -571,7 +549,6 @@ export default function CheckoutDialog({ open, onClose, cart, onSuccess }: Props
         </DialogContent>
       </Dialog>
 
-      {/* Quick create client dialog */}
       <Dialog open={createOpen} onOpenChange={setCreateOpen}>
         <DialogContent className="max-w-sm">
           <DialogHeader>

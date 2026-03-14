@@ -65,7 +65,6 @@ export default function ReportesPage() {
         </p>
       </div>
 
-      {/* Tarjetas de resumen */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
@@ -124,7 +123,6 @@ export default function ReportesPage() {
         </Card>
       </div>
 
-      {/* Historial de sesiones */}
       <div className="space-y-2">
         <h2 className="text-lg font-semibold">Historial de Sesiones</h2>
         {loading ? (

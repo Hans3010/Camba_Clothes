@@ -35,7 +35,6 @@ export default function Cart({ items, onUpdateQuantity, onRemove }: Props) {
           key={item.id}
           className="flex items-center gap-2 rounded-lg border bg-background p-2 text-sm"
         >
-          {/* Product info */}
           <div className="flex-1 min-w-0">
             <p className="font-medium leading-tight truncate">{item.nombreProducto}</p>
             <p className="text-xs text-muted-foreground">
@@ -43,7 +42,6 @@ export default function Cart({ items, onUpdateQuantity, onRemove }: Props) {
             </p>
           </div>
 
-          {/* Quantity controls */}
           <div className="flex items-center gap-1 shrink-0">
             <Button
               variant="outline"
@@ -68,12 +66,10 @@ export default function Cart({ items, onUpdateQuantity, onRemove }: Props) {
             </Button>
           </div>
 
-          {/* Line subtotal */}
           <span className="w-20 text-right font-semibold shrink-0 tabular-nums text-xs">
             Bs. {(item.precioVenta * item.cantidad).toFixed(2)}
           </span>
 
-          {/* Remove button */}
           <Button
             variant="ghost"
             size="icon"

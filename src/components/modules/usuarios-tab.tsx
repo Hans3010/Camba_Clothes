@@ -50,7 +50,6 @@ export const UsuariosTab = () => {
   return (
     <div className="space-y-6">
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Lado Izquierdo: Formulario */}
         <div className="lg:col-span-1 space-y-4">
           <h3 className="text-lg font-medium">
             {editingId ? "Editar Usuario" : "Nuevo Usuario"}
@@ -63,7 +62,6 @@ export const UsuariosTab = () => {
           />
         </div>
 
-        {/* Lado Derecho: Tabla */}
         <div className="lg:col-span-2 space-y-4">
           <h3 className="text-lg font-medium">Usuarios Registrados</h3>
           <DataTable searchKey="usuario" columns={columns} data={data} />

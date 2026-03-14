@@ -24,8 +24,6 @@ export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url)
   const sesionActual = searchParams.get("sesion") === "actual"
 
-  // ?sesion=actual → Solo ventas de la sesión de caja actualmente abierta del usuario
-  // Usado por el componente de resumen en la página de caja
   if (sesionActual) {
     const sesionAbierta = await prisma.sesionCaja.findFirst({
       where: { idUsuario: session.user.id, estado: "ABIERTA" },
@@ -40,7 +38,6 @@ export async function GET(req: NextRequest) {
     return NextResponse.json(ventas)
   }
 
-  // VENDEDOR sin filtro → Todas sus ventas históricas (todas sus sesiones)
   if (session.user.rol === "VENDEDOR") {
     const ventas = await prisma.venta.findMany({
       where: { idUsuario: session.user.id },
@@ -51,7 +48,6 @@ export async function GET(req: NextRequest) {
     return NextResponse.json(ventas)
   }
 
-  // ADMIN → Todas las ventas del sistema
   const ventas = await prisma.venta.findMany({
     include: ventaInclude,
     orderBy: { fecha: "desc" },
@@ -72,7 +68,6 @@ export async function POST(req: NextRequest) {
 
   const { idCliente, idTipoPago, items } = result.data
 
-  // 1. Verificar sesión de caja abierta
   const sesionCaja = await prisma.sesionCaja.findFirst({
     where: { idUsuario: session.user.id, estado: "ABIERTA" },
   })
@@ -83,7 +78,6 @@ export async function POST(req: NextRequest) {
     )
   }
 
-  // 2. Verificar stock de todos los productos
   const productIds = items.map((i) => i.idProducto)
   const productos = await prisma.producto.findMany({
     where: { id: { in: productIds } },
@@ -103,11 +97,9 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Stock insuficiente", items: stockErrors }, { status: 409 })
   }
 
-  // 3. Calcular totales
   const subtotal = items.reduce((acc, item) => acc + item.precio * item.cantidad, 0)
   const total = subtotal
 
-  // 4. Crear la venta en transacción atómica
   const venta = await prisma.$transaction(async (tx) => {
     const nuevaVenta = await tx.venta.create({
       data: {

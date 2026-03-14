@@ -60,7 +60,6 @@ export const UsuarioForm = ({ initialId, onSuccess, onCancel }: UsuarioFormProps
     },
   });
 
-  // Cargar datos del usuario al editar
   useEffect(() => {
     if (!initialId) return;
 

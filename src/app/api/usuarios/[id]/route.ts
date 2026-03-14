@@ -23,7 +23,6 @@ export async function PUT(
       return NextResponse.json({ error: result.error.flatten() }, { status: 400 })
     }
 
-    // Verificar que el nombre de usuario no esté en uso por otro usuario
     const existe = await prisma.usuario.findFirst({
       where: { usuario: result.data.usuario, NOT: { id: numId } },
     })
@@ -37,7 +36,6 @@ export async function PUT(
       estado: result.data.estado,
     }
 
-    // Solo actualizar la contraseña si se proporcionó una nueva
     if (result.data.password && result.data.password.length > 0) {
       updateData.password = await bcrypt.hash(result.data.password, 10)
     }
