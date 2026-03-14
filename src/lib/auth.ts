@@ -20,14 +20,25 @@ export const authOptions: NextAuthOptions = {
       async authorize(credentials) {
         if (!credentials?.usuario || !credentials?.password) return null
 
-        const user = await prisma.usuario.findUnique({
-          where: { usuario: credentials.usuario },
-          include: { tipoUsuario: true },
-        })
+        let user
+        try {
+          user = await prisma.usuario.findUnique({
+            where: { usuario: credentials.usuario },
+            include: { tipoUsuario: true },
+          })
+          console.log("[auth] user found:", user ? user.usuario : "null")
+        } catch (e) {
+          console.error("[auth] DB error:", e)
+          return null
+        }
 
-        if (!user || user.estado !== "ACTIVO") return null
+        if (!user || user.estado !== "ACTIVO") {
+          console.log("[auth] user not found or inactive")
+          return null
+        }
 
         const passwordMatch = await bcrypt.compare(credentials.password, user.password)
+        console.log("[auth] passwordMatch:", passwordMatch)
         if (!passwordMatch) return null
 
         return {
