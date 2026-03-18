@@ -5,30 +5,234 @@ import { toast } from "sonner"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
-import { Search, TrendingUp, TrendingDown, Users, Settings, GraduationCap, DollarSign } from "lucide-react"
+import { Badge } from "@/components/ui/badge"
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import {
+  Search, Users, Settings, GraduationCap,
+  DollarSign, Target, CheckCircle2, AlertTriangle, XCircle, ArrowUpCircle,
+} from "lucide-react"
+import type { Perspectiva, Cumplimiento, KPIEvaluado } from "@/lib/kpi-metas"
 
 interface CMIData {
   financiera: { ingresosBrutos: number; costoTotal: number; gananciaTotal: number; margenPromedio: number; totalCompras: number }
   clientes: { clientesActivos: number; clientesNuevos: number; frecuentes: number; ocasionales: number; ticketPromedio: number }
   procesosInternos: { rotacionInventario: number; productosStockCritico: number; productosAgotados: number; tasaAnulacion: number }
   aprendizaje: { cambioVentas: number; cambioMargen: number; ventasActual: number; ventasAnterior: number }
+  evaluacion: KPIEvaluado[]
 }
 
 function fmt(n: number) {
   return `Bs. ${n.toLocaleString("es-BO", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
 }
 
-function Indicador({ label, valor, sufijo }: { label: string; valor: string; sufijo?: string }) {
+function getDefaultDesde() {
+  const d = new Date(); d.setDate(1); return d.toISOString().split("T")[0]
+}
+
+const PERSPECTIVAS: {
+  key: Perspectiva
+  titulo: string
+  color: string
+  borderColor: string
+  icon: typeof DollarSign
+  iconColor: string
+}[] = [
+  { key: "financiera", titulo: "Perspectiva Financiera", color: "green", borderColor: "border-l-green-500", icon: DollarSign, iconColor: "text-green-600" },
+  { key: "clientes", titulo: "Perspectiva de Clientes", color: "blue", borderColor: "border-l-blue-500", icon: Users, iconColor: "text-blue-600" },
+  { key: "procesosInternos", titulo: "Procesos Internos", color: "orange", borderColor: "border-l-orange-500", icon: Settings, iconColor: "text-orange-600" },
+  { key: "aprendizaje", titulo: "Aprendizaje y Crecimiento", color: "purple", borderColor: "border-l-purple-500", icon: GraduationCap, iconColor: "text-purple-600" },
+]
+
+function SemaforoBadge({ cumplimiento }: { cumplimiento: Cumplimiento }) {
+  switch (cumplimiento) {
+    case "superado":
+      return (
+        <Badge className="bg-green-100 text-green-700 border-green-300 gap-1">
+          <ArrowUpCircle className="h-3 w-3" />
+          Superado
+        </Badge>
+      )
+    case "en_meta":
+      return (
+        <Badge className="bg-green-50 text-green-600 border-green-200 gap-1">
+          <CheckCircle2 className="h-3 w-3" />
+          En Meta
+        </Badge>
+      )
+    case "bajo_meta":
+      return (
+        <Badge className="bg-amber-50 text-amber-700 border-amber-300 gap-1">
+          <AlertTriangle className="h-3 w-3" />
+          Bajo Meta
+        </Badge>
+      )
+    case "critico":
+      return (
+        <Badge className="bg-red-50 text-red-700 border-red-300 gap-1">
+          <XCircle className="h-3 w-3" />
+          Crítico
+        </Badge>
+      )
+  }
+}
+
+function BarraProgreso({ porcentaje, cumplimiento }: { porcentaje: number; cumplimiento: Cumplimiento }) {
+  const colorMap: Record<Cumplimiento, string> = {
+    superado: "bg-green-500",
+    en_meta: "bg-green-400",
+    bajo_meta: "bg-amber-400",
+    critico: "bg-red-500",
+  }
+  const ancho = Math.min(Math.max(porcentaje, 0), 100)
   return (
-    <div>
-      <p className="text-xs text-muted-foreground">{label}</p>
-      <p className="text-lg font-bold">{valor}{sufijo && <span className="text-sm font-normal text-muted-foreground ml-1">{sufijo}</span>}</p>
+    <div className="w-full bg-muted rounded-full h-2">
+      <div
+        className={`h-2 rounded-full transition-all ${colorMap[cumplimiento]}`}
+        style={{ width: `${ancho}%` }}
+      />
     </div>
   )
 }
 
-function getDefaultDesde() {
-  const d = new Date(); d.setDate(1); return d.toISOString().split("T")[0]
+function FrecuenciaBadge({ frecuencia }: { frecuencia: string }) {
+  const colorMap: Record<string, string> = {
+    Diaria: "bg-violet-50 text-violet-700 border-violet-200",
+    Semanal: "bg-sky-50 text-sky-700 border-sky-200",
+    Mensual: "bg-slate-100 text-slate-700 border-slate-300",
+  }
+  return <Badge variant="outline" className={`text-[10px] ${colorMap[frecuencia] ?? ""}`}>{frecuencia}</Badge>
+}
+
+function ResumenRapido({ data }: { data: CMIData }) {
+  const total = data.evaluacion.length
+  const superados = data.evaluacion.filter((e) => e.cumplimiento === "superado").length
+  const enMeta = data.evaluacion.filter((e) => e.cumplimiento === "en_meta").length
+  const bajoMeta = data.evaluacion.filter((e) => e.cumplimiento === "bajo_meta").length
+  const criticos = data.evaluacion.filter((e) => e.cumplimiento === "critico").length
+
+  return (
+    <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+      <Card className="p-3 text-center">
+        <p className="text-xs text-muted-foreground">Total KPIs</p>
+        <p className="text-2xl font-bold">{total}</p>
+      </Card>
+      <Card className="p-3 text-center border-green-200">
+        <p className="text-xs text-green-600">Superados</p>
+        <p className="text-2xl font-bold text-green-600">{superados}</p>
+      </Card>
+      <Card className="p-3 text-center border-green-100">
+        <p className="text-xs text-green-500">En Meta</p>
+        <p className="text-2xl font-bold text-green-500">{enMeta}</p>
+      </Card>
+      <Card className="p-3 text-center border-amber-200">
+        <p className="text-xs text-amber-600">Bajo Meta</p>
+        <p className="text-2xl font-bold text-amber-600">{bajoMeta}</p>
+      </Card>
+      <Card className="p-3 text-center border-red-200">
+        <p className="text-xs text-red-600">Críticos</p>
+        <p className="text-2xl font-bold text-red-600">{criticos}</p>
+      </Card>
+    </div>
+  )
+}
+
+function PerspectivaCard({ config, kpis, data }: {
+  config: (typeof PERSPECTIVAS)[0]
+  kpis: KPIEvaluado[]
+  data: CMIData
+}) {
+  const Icon = config.icon
+
+  // Valores de resumen por perspectiva
+  const resumenMap: Record<Perspectiva, { label: string; valor: string }[]> = {
+    financiera: [
+      { label: "Ingresos", valor: fmt(data.financiera.ingresosBrutos) },
+      { label: "Ganancia", valor: fmt(data.financiera.gananciaTotal) },
+    ],
+    clientes: [
+      { label: "Activos", valor: String(data.clientes.clientesActivos) },
+      { label: "Ticket Prom.", valor: fmt(data.clientes.ticketPromedio) },
+    ],
+    procesosInternos: [
+      { label: "Stock Crítico", valor: String(data.procesosInternos.productosStockCritico) },
+      { label: "Anulación", valor: `${data.procesosInternos.tasaAnulacion.toFixed(1)}%` },
+    ],
+    aprendizaje: [
+      { label: "Ventas Actual", valor: fmt(data.aprendizaje.ventasActual) },
+      { label: "Ventas Anterior", valor: fmt(data.aprendizaje.ventasAnterior) },
+    ],
+  }
+
+  return (
+    <Card className={`border-l-4 ${config.borderColor}`}>
+      <CardHeader className="pb-3">
+        <div className="flex items-center justify-between">
+          <CardTitle className="text-base flex items-center gap-2">
+            <Icon className={`h-4 w-4 ${config.iconColor}`} />
+            {config.titulo}
+          </CardTitle>
+          <div className="flex gap-3">
+            {resumenMap[config.key].map((r) => (
+              <div key={r.label} className="text-right">
+                <p className="text-[10px] text-muted-foreground">{r.label}</p>
+                <p className="text-sm font-semibold">{r.valor}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </CardHeader>
+      <CardContent className="pt-0">
+        <div className="overflow-x-auto">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead className="w-[30%]">Nombre Estratégico</TableHead>
+                <TableHead className="w-[18%]">Objetivo</TableHead>
+                <TableHead className="text-center w-[12%]">Valor Actual</TableHead>
+                <TableHead className="text-center w-[10%]">Meta</TableHead>
+                <TableHead className="text-center w-[8%]">Frec.</TableHead>
+                <TableHead className="text-center w-[12%]">Estado</TableHead>
+                <TableHead className="w-[10%]">Progreso</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {kpis.map((kpi) => (
+                <TableRow key={kpi.id}>
+                  <TableCell>
+                    <div>
+                      <p className="font-medium text-sm leading-tight">{kpi.nombreEstrategico}</p>
+                      <p className="text-[11px] text-muted-foreground">{kpi.indicador}</p>
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <p className="text-xs text-muted-foreground leading-snug">{kpi.objetivo}</p>
+                  </TableCell>
+                  <TableCell className="text-center">
+                    <span className="text-sm font-bold">{kpi.valorFormateado}</span>
+                  </TableCell>
+                  <TableCell className="text-center">
+                    <div className="flex items-center justify-center gap-1">
+                      <Target className="h-3 w-3 text-muted-foreground" />
+                      <span className="text-xs font-medium">{kpi.meta}</span>
+                    </div>
+                  </TableCell>
+                  <TableCell className="text-center">
+                    <FrecuenciaBadge frecuencia={kpi.frecuencia} />
+                  </TableCell>
+                  <TableCell className="text-center">
+                    <SemaforoBadge cumplimiento={kpi.cumplimiento} />
+                  </TableCell>
+                  <TableCell>
+                    <BarraProgreso porcentaje={kpi.porcentajeCumplimiento} cumplimiento={kpi.cumplimiento} />
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </div>
+      </CardContent>
+    </Card>
+  )
 }
 
 export function TabCMI() {
@@ -68,100 +272,14 @@ export function TabCMI() {
       </div>
 
       {data && (
-        <div className="grid md:grid-cols-2 gap-6">
-          <Card className="border-l-4 border-l-green-500">
-            <CardHeader className="pb-3">
-              <CardTitle className="text-base flex items-center gap-2">
-                <DollarSign className="h-4 w-4 text-green-600" />
-                Perspectiva Financiera
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-2 gap-4">
-                <Indicador label="Ingresos Brutos" valor={fmt(data.financiera.ingresosBrutos)} />
-                <Indicador label="Costo de Mercadería" valor={fmt(data.financiera.costoTotal)} />
-                <Indicador label="Ganancia Bruta" valor={fmt(data.financiera.gananciaTotal)} />
-                <Indicador label="Margen Promedio" valor={`${data.financiera.margenPromedio.toFixed(1)}%`} />
-                <Indicador label="Compras a Proveedores" valor={fmt(data.financiera.totalCompras)} />
-              </div>
-            </CardContent>
-          </Card>
+        <div className="space-y-6">
+          <ResumenRapido data={data} />
 
-          <Card className="border-l-4 border-l-blue-500">
-            <CardHeader className="pb-3">
-              <CardTitle className="text-base flex items-center gap-2">
-                <Users className="h-4 w-4 text-blue-600" />
-                Perspectiva de Clientes
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-2 gap-4">
-                <Indicador label="Clientes Activos" valor={String(data.clientes.clientesActivos)} sufijo="en período" />
-                <Indicador label="Clientes Nuevos" valor={String(data.clientes.clientesNuevos)} />
-                <Indicador label="Frecuentes" valor={String(data.clientes.frecuentes)} sufijo="(5+ compras)" />
-                <Indicador label="Ocasionales" valor={String(data.clientes.ocasionales)} sufijo="(1-4 compras)" />
-                <Indicador label="Ticket Promedio" valor={fmt(data.clientes.ticketPromedio)} />
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="border-l-4 border-l-orange-500">
-            <CardHeader className="pb-3">
-              <CardTitle className="text-base flex items-center gap-2">
-                <Settings className="h-4 w-4 text-orange-600" />
-                Procesos Internos
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-2 gap-4">
-                <Indicador label="Rotación de Inventario" valor={`${data.procesosInternos.rotacionInventario.toFixed(2)}x`} />
-                <Indicador label="Stock Crítico" valor={String(data.procesosInternos.productosStockCritico)} sufijo="productos" />
-                <Indicador label="Agotados" valor={String(data.procesosInternos.productosAgotados)} sufijo="productos" />
-                <Indicador label="Tasa de Anulación" valor={`${data.procesosInternos.tasaAnulacion.toFixed(1)}%`} />
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="border-l-4 border-l-purple-500">
-            <CardHeader className="pb-3">
-              <CardTitle className="text-base flex items-center gap-2">
-                <GraduationCap className="h-4 w-4 text-purple-600" />
-                Aprendizaje y Crecimiento
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <p className="text-xs text-muted-foreground">Variación de Ventas</p>
-                  <div className="flex items-center gap-1">
-                    {data.aprendizaje.cambioVentas >= 0 ? (
-                      <TrendingUp className="h-4 w-4 text-green-600" />
-                    ) : (
-                      <TrendingDown className="h-4 w-4 text-red-600" />
-                    )}
-                    <span className={`text-lg font-bold ${data.aprendizaje.cambioVentas >= 0 ? "text-green-600" : "text-red-600"}`}>
-                      {data.aprendizaje.cambioVentas >= 0 ? "+" : ""}{data.aprendizaje.cambioVentas.toFixed(1)}%
-                    </span>
-                  </div>
-                </div>
-                <div>
-                  <p className="text-xs text-muted-foreground">Variación de Margen</p>
-                  <div className="flex items-center gap-1">
-                    {data.aprendizaje.cambioMargen >= 0 ? (
-                      <TrendingUp className="h-4 w-4 text-green-600" />
-                    ) : (
-                      <TrendingDown className="h-4 w-4 text-red-600" />
-                    )}
-                    <span className={`text-lg font-bold ${data.aprendizaje.cambioMargen >= 0 ? "text-green-600" : "text-red-600"}`}>
-                      {data.aprendizaje.cambioMargen >= 0 ? "+" : ""}{data.aprendizaje.cambioMargen.toFixed(1)} pp
-                    </span>
-                  </div>
-                </div>
-                <Indicador label="Ventas Período Actual" valor={fmt(data.aprendizaje.ventasActual)} />
-                <Indicador label="Ventas Período Anterior" valor={fmt(data.aprendizaje.ventasAnterior)} />
-              </div>
-            </CardContent>
-          </Card>
+          {PERSPECTIVAS.map((config) => {
+            const kpis = data.evaluacion.filter((e) => e.perspectiva === config.key)
+            if (kpis.length === 0) return null
+            return <PerspectivaCard key={config.key} config={config} kpis={kpis} data={data} />
+          })}
         </div>
       )}
     </div>

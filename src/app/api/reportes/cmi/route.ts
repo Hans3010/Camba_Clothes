@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
+import { KPI_METAS, evaluarCumplimiento, type KPIEvaluado } from "@/lib/kpi-metas"
 
 export async function GET(req: NextRequest) {
   const session = await getServerSession(authOptions)
@@ -149,13 +150,50 @@ export async function GET(req: NextRequest) {
     }))
     .sort((a, b) => b.ganancia - a.ganancia)
 
+  // --- Evaluar KPIs contra metas ---
+  const totalComprasVal = Number(compras._sum.total || 0)
+  const comprasVentasRatio = ingresosBrutos > 0 ? (totalComprasVal / ingresosBrutos) * 100 : 0
+  const porcentajeFrecuentes = clienteIdsEnPeriodo.size > 0 ? (frecuentes / clienteIdsEnPeriodo.size) * 100 : 0
+  const cambioGanancia = ventasAnteriorTotal > 0
+    ? (((gananciaTotal) - (ventasAnteriorTotal - costoAnterior)) / (ventasAnteriorTotal - costoAnterior)) * 100
+    : gananciaTotal > 0 ? 100 : 0
+
+  const valorMap: Record<string, { valor: number; formateado: string }> = {
+    fin_ingresos: { valor: cambioVentas, formateado: `${cambioVentas >= 0 ? "+" : ""}${cambioVentas.toFixed(1)}%` },
+    fin_ganancia: { valor: cambioGanancia, formateado: `${cambioGanancia >= 0 ? "+" : ""}${cambioGanancia.toFixed(1)}%` },
+    fin_margen: { valor: margenPromedio, formateado: `${margenPromedio.toFixed(1)}%` },
+    fin_compras_ratio: { valor: comprasVentasRatio, formateado: `${comprasVentasRatio.toFixed(1)}%` },
+    cli_activos: { valor: clienteIdsEnPeriodo.size, formateado: String(clienteIdsEnPeriodo.size) },
+    cli_nuevos: { valor: clientesNuevos, formateado: String(clientesNuevos) },
+    cli_frecuentes: { valor: porcentajeFrecuentes, formateado: `${porcentajeFrecuentes.toFixed(1)}%` },
+    cli_ticket: { valor: ticketPromedioClientes, formateado: `Bs. ${ticketPromedioClientes.toFixed(2)}` },
+    proc_rotacion: { valor: rotacionInventario, formateado: `${rotacionInventario.toFixed(2)}x` },
+    proc_stock_critico: { valor: productosStockCritico, formateado: String(productosStockCritico) },
+    proc_agotados: { valor: productosAgotados, formateado: String(productosAgotados) },
+    proc_anulacion: { valor: tasaAnulacion, formateado: `${tasaAnulacion.toFixed(1)}%` },
+    apr_ventas: { valor: cambioVentas, formateado: `${cambioVentas >= 0 ? "+" : ""}${cambioVentas.toFixed(1)}%` },
+    apr_margen: { valor: cambioMargen, formateado: `${cambioMargen >= 0 ? "+" : ""}${cambioMargen.toFixed(1)} pp` },
+  }
+
+  const evaluacion: KPIEvaluado[] = KPI_METAS.map((kpi) => {
+    const datos = valorMap[kpi.id] ?? { valor: 0, formateado: "0" }
+    const { cumplimiento, porcentaje } = evaluarCumplimiento(datos.valor, kpi.metaValor, kpi.metaTipo)
+    return {
+      ...kpi,
+      valorActual: datos.valor,
+      valorFormateado: datos.formateado,
+      cumplimiento,
+      porcentajeCumplimiento: Math.round(porcentaje),
+    }
+  })
+
   return NextResponse.json({
     financiera: {
       ingresosBrutos,
       costoTotal,
       gananciaTotal,
       margenPromedio,
-      totalCompras: Number(compras._sum.total || 0),
+      totalCompras: totalComprasVal,
     },
     clientes: {
       clientesActivos: clienteIdsEnPeriodo.size,
@@ -176,6 +214,7 @@ export async function GET(req: NextRequest) {
       ventasActual: ingresosBrutos,
       ventasAnterior: ventasAnteriorTotal,
     },
+    evaluacion,
     rentabilidadProductos,
     rentabilidadCategorias,
   })
