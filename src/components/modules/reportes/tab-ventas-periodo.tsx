@@ -10,6 +10,7 @@ import { Table, TableBody, TableCell, TableFooter, TableHead, TableHeader, Table
 import { DataTable } from "@/components/ui/data-table"
 import { createVentasColumns, VentaRow } from "@/components/tables/ventas-columns"
 import { Receipt, ShoppingBag, TrendingUp, CreditCard, Search } from "lucide-react"
+import { fechaLocalHoy, fechaLocalInicioMes } from "@/lib/utils"
 
 interface VentaPorDia { fecha: string; total: number; cantidad: number }
 interface VentaPorTipoPago { metodo: string; cantidad: number; total: number }
@@ -25,19 +26,9 @@ function fmt(n: number) {
   return `Bs. ${n.toLocaleString("es-BO", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
 }
 
-function getDefaultDesde() {
-  const d = new Date()
-  d.setDate(1)
-  return d.toISOString().split("T")[0]
-}
-
-function getDefaultHasta() {
-  return new Date().toISOString().split("T")[0]
-}
-
 export function TabVentasPeriodo() {
-  const [desde, setDesde] = useState(getDefaultDesde())
-  const [hasta, setHasta] = useState(getDefaultHasta())
+  const [desde, setDesde] = useState(fechaLocalInicioMes())
+  const [hasta, setHasta] = useState(fechaLocalHoy())
   const [tipoPago, setTipoPago] = useState("all")
   const [data, setData] = useState<ReporteData | null>(null)
   const [loading, setLoading] = useState(false)

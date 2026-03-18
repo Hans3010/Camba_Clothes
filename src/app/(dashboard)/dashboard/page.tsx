@@ -9,7 +9,7 @@ import { Badge } from "@/components/ui/badge"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import {
   TrendingUp, TrendingDown, ShoppingBag, Receipt, Percent,
-  AlertTriangle, CheckCircle2, Package,
+  AlertTriangle, CheckCircle2, Package, DollarSign, Users, Settings, Target,
 } from "lucide-react"
 
 interface TopProducto {
@@ -29,6 +29,66 @@ interface DashboardData {
 
 function fmt(n: number) {
   return `Bs. ${n.toLocaleString("es-BO", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+}
+
+// Configuración de metas y ejes BSC para cada KPI del dashboard
+const KPI_CONFIG = {
+  ventas: {
+    eje: "Financiera",
+    ejeColor: "bg-green-100 text-green-700 border-green-200",
+    ejeIcon: DollarSign,
+    meta: "+5% vs anterior",
+    metaValor: 5,
+  },
+  transacciones: {
+    eje: "Procesos",
+    ejeColor: "bg-orange-100 text-orange-700 border-orange-200",
+    ejeIcon: Settings,
+    meta: ">= 3 por día",
+    metaValor: 3,
+  },
+  ticket: {
+    eje: "Clientes",
+    ejeColor: "bg-blue-100 text-blue-700 border-blue-200",
+    ejeIcon: Users,
+    meta: ">= Bs. 100",
+    metaValor: 100,
+  },
+  margen: {
+    eje: "Financiera",
+    ejeColor: "bg-green-100 text-green-700 border-green-200",
+    ejeIcon: DollarSign,
+    meta: ">= 35%",
+    metaValor: 35,
+  },
+}
+
+function MetaIndicator({ valor, meta, tipo }: { valor: number; meta: number; tipo: "min" | "crecimiento" }) {
+  let cumple: boolean
+  if (tipo === "crecimiento") {
+    cumple = valor >= meta
+  } else {
+    cumple = valor >= meta
+  }
+  return (
+    <div className="flex items-center gap-1 mt-1">
+      <Target className="h-3 w-3 text-muted-foreground" />
+      <span className="text-[10px] text-muted-foreground">Meta:</span>
+      <span className={`text-[10px] font-medium ${cumple ? "text-green-600" : "text-amber-600"}`}>
+        {cumple ? "Cumplida" : "Pendiente"}
+      </span>
+    </div>
+  )
+}
+
+function EjeBadge({ config }: { config: typeof KPI_CONFIG.ventas }) {
+  const Icon = config.ejeIcon
+  return (
+    <Badge variant="outline" className={`text-[10px] gap-1 ${config.ejeColor}`}>
+      <Icon className="h-2.5 w-2.5" />
+      {config.eje}
+    </Badge>
+  )
 }
 
 export default function DashboardPage() {
@@ -86,10 +146,11 @@ export default function DashboardPage() {
       ) : data ? (
         <>
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-            <Card>
+            {/* Ventas Totales — Eje Financiera */}
+            <Card className="border-l-4 border-l-green-400">
               <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
                 <CardTitle className="text-sm font-medium text-muted-foreground">Ventas Totales</CardTitle>
-                <TrendingUp className="h-4 w-4 text-muted-foreground" />
+                <EjeBadge config={KPI_CONFIG.ventas} />
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">{fmt(data.ventasTotales)}</div>
@@ -104,40 +165,47 @@ export default function DashboardPage() {
                   </span>
                   <span className="text-xs text-muted-foreground">vs anterior</span>
                 </div>
+                <MetaIndicator valor={cambio} meta={KPI_CONFIG.ventas.metaValor} tipo="crecimiento" />
               </CardContent>
             </Card>
 
-            <Card>
+            {/* Transacciones — Eje Procesos */}
+            <Card className="border-l-4 border-l-orange-400">
               <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
                 <CardTitle className="text-sm font-medium text-muted-foreground">Transacciones</CardTitle>
-                <ShoppingBag className="h-4 w-4 text-muted-foreground" />
+                <EjeBadge config={KPI_CONFIG.transacciones} />
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">{data.cantidadTransacciones}</div>
                 <p className="text-xs text-muted-foreground mt-1">ventas completadas</p>
+                <MetaIndicator valor={data.cantidadTransacciones} meta={KPI_CONFIG.transacciones.metaValor} tipo="min" />
               </CardContent>
             </Card>
 
-            <Card>
+            {/* Ticket Promedio — Eje Clientes */}
+            <Card className="border-l-4 border-l-blue-400">
               <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
                 <CardTitle className="text-sm font-medium text-muted-foreground">Ticket Promedio</CardTitle>
-                <Receipt className="h-4 w-4 text-muted-foreground" />
+                <EjeBadge config={KPI_CONFIG.ticket} />
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">{fmt(data.ticketPromedio)}</div>
                 <p className="text-xs text-muted-foreground mt-1">por transacción</p>
+                <MetaIndicator valor={data.ticketPromedio} meta={KPI_CONFIG.ticket.metaValor} tipo="min" />
               </CardContent>
             </Card>
 
+            {/* Margen Promedio — Eje Financiera (solo ADMIN) */}
             {isAdmin && (
-              <Card>
+              <Card className="border-l-4 border-l-green-400">
                 <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
                   <CardTitle className="text-sm font-medium text-muted-foreground">Margen Promedio</CardTitle>
-                  <Percent className="h-4 w-4 text-muted-foreground" />
+                  <EjeBadge config={KPI_CONFIG.margen} />
                 </CardHeader>
                 <CardContent>
                   <div className="text-2xl font-bold">{data.margenPromedio.toFixed(1)}%</div>
                   <p className="text-xs text-muted-foreground mt-1">de ganancia</p>
+                  <MetaIndicator valor={data.margenPromedio} meta={KPI_CONFIG.margen.metaValor} tipo="min" />
                 </CardContent>
               </Card>
             )}
@@ -188,6 +256,10 @@ export default function DashboardPage() {
                   <CardTitle className="text-base flex items-center gap-2">
                     <AlertTriangle className="h-4 w-4 text-amber-500" />
                     Alertas de Stock
+                    <Badge variant="outline" className="text-[10px] gap-1 bg-orange-100 text-orange-700 border-orange-200 ml-auto">
+                      <Settings className="h-2.5 w-2.5" />
+                      Procesos
+                    </Badge>
                   </CardTitle>
                 </CardHeader>
                 <CardContent>

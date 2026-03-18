@@ -18,9 +18,8 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: "Parámetros desde y hasta requeridos" }, { status: 400 })
   }
 
-  const desde = new Date(desdeStr)
-  const hasta = new Date(hastaStr)
-  hasta.setHours(23, 59, 59, 999)
+  const desde = new Date(`${desdeStr}T00:00:00.000Z`)
+  const hasta = new Date(`${hastaStr}T23:59:59.999Z`)
 
   const detalleWhere: Record<string, unknown> = {
     venta: { estado: "COMPLETADA", fecha: { gte: desde, lte: hasta } },

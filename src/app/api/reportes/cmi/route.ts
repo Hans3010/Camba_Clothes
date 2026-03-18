@@ -13,10 +13,10 @@ export async function GET(req: NextRequest) {
   const ahora = new Date()
   const inicioMes = new Date(ahora.getFullYear(), ahora.getMonth(), 1)
 
-  const desde = params.get("desde") ? new Date(params.get("desde")!) : inicioMes
-  const hastaRaw = params.get("hasta") ? new Date(params.get("hasta")!) : ahora
-  const hasta = new Date(hastaRaw)
-  hasta.setHours(23, 59, 59, 999)
+  const desdeParam = params.get("desde")
+  const hastaParam = params.get("hasta")
+  const desde = desdeParam ? new Date(`${desdeParam}T00:00:00.000Z`) : inicioMes
+  const hasta = hastaParam ? new Date(`${hastaParam}T23:59:59.999Z`) : ahora
 
   const diffMs = hasta.getTime() - desde.getTime()
   const desdeAnterior = new Date(desde.getTime() - diffMs)

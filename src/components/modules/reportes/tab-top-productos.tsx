@@ -9,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge"
 import { Table, TableBody, TableCell, TableFooter, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Search, Trophy, ShoppingBag, TrendingUp } from "lucide-react"
+import { fechaLocalHoy, fechaLocalInicioMes } from "@/lib/utils"
 
 interface CategoriaOption { id: number; nombreCategoria: string }
 interface TopProducto {
@@ -21,13 +22,9 @@ function fmt(n: number) {
   return `Bs. ${n.toLocaleString("es-BO", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
 }
 
-function getDefaultDesde() {
-  const d = new Date(); d.setDate(1); return d.toISOString().split("T")[0]
-}
-
 export function TabTopProductos() {
-  const [desde, setDesde] = useState(getDefaultDesde())
-  const [hasta, setHasta] = useState(new Date().toISOString().split("T")[0])
+  const [desde, setDesde] = useState(fechaLocalInicioMes())
+  const [hasta, setHasta] = useState(fechaLocalHoy())
   const [categoria, setCategoria] = useState("all")
   const [categorias, setCategorias] = useState<CategoriaOption[]>([])
   const [data, setData] = useState<TopProducto[]>([])

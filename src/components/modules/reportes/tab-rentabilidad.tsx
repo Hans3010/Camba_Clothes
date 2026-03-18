@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge"
 import { Table, TableBody, TableCell, TableFooter, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Search, Package, Layers } from "lucide-react"
+import { fechaLocalHoy, fechaLocalInicioMes } from "@/lib/utils"
 
 interface RentProducto {
   id: number; nombreProducto: string; talla: string; color: string
@@ -28,13 +29,9 @@ function MargenBadge({ margen }: { margen: number }) {
   return <Badge className={color}>{margen.toFixed(1)}%</Badge>
 }
 
-function getDefaultDesde() {
-  const d = new Date(); d.setDate(1); return d.toISOString().split("T")[0]
-}
-
 export function TabRentabilidad() {
-  const [desde, setDesde] = useState(getDefaultDesde())
-  const [hasta, setHasta] = useState(new Date().toISOString().split("T")[0])
+  const [desde, setDesde] = useState(fechaLocalInicioMes())
+  const [hasta, setHasta] = useState(fechaLocalHoy())
   const [productos, setProductos] = useState<RentProducto[]>([])
   const [categorias, setCategorias] = useState<RentCategoria[]>([])
   const [loading, setLoading] = useState(false)

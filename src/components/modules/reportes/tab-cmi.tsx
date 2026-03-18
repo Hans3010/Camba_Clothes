@@ -12,6 +12,7 @@ import {
   DollarSign, Target, CheckCircle2, AlertTriangle, XCircle, ArrowUpCircle,
 } from "lucide-react"
 import type { Perspectiva, Cumplimiento, KPIEvaluado } from "@/lib/kpi-metas"
+import { fechaLocalHoy, fechaLocalInicioMes } from "@/lib/utils"
 
 interface CMIData {
   financiera: { ingresosBrutos: number; costoTotal: number; gananciaTotal: number; margenPromedio: number; totalCompras: number }
@@ -23,10 +24,6 @@ interface CMIData {
 
 function fmt(n: number) {
   return `Bs. ${n.toLocaleString("es-BO", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
-}
-
-function getDefaultDesde() {
-  const d = new Date(); d.setDate(1); return d.toISOString().split("T")[0]
 }
 
 const PERSPECTIVAS: {
@@ -236,8 +233,8 @@ function PerspectivaCard({ config, kpis, data }: {
 }
 
 export function TabCMI() {
-  const [desde, setDesde] = useState(getDefaultDesde())
-  const [hasta, setHasta] = useState(new Date().toISOString().split("T")[0])
+  const [desde, setDesde] = useState(fechaLocalInicioMes())
+  const [hasta, setHasta] = useState(fechaLocalHoy())
   const [data, setData] = useState<CMIData | null>(null)
   const [loading, setLoading] = useState(false)
 

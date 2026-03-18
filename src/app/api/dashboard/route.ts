@@ -5,6 +5,7 @@ import { prisma } from "@/lib/prisma"
 
 function getDateRange(periodo: string) {
   const ahora = new Date()
+  const hoyStr = ahora.toISOString().split("T")[0]
   let desde: Date
   let desdeAnterior: Date
 
@@ -19,13 +20,12 @@ function getDateRange(periodo: string) {
     desdeAnterior = new Date(desde)
     desdeAnterior.setMonth(desdeAnterior.getMonth() - 1)
   } else {
-    desde = new Date(ahora)
-    desde.setHours(0, 0, 0, 0)
+    desde = new Date(`${hoyStr}T00:00:00.000Z`)
     desdeAnterior = new Date(desde)
     desdeAnterior.setDate(desdeAnterior.getDate() - 1)
   }
 
-  return { desde, hasta: ahora, desdeAnterior }
+  return { desde, hasta: new Date(`${hoyStr}T23:59:59.999Z`), desdeAnterior }
 }
 
 export async function GET(req: NextRequest) {
