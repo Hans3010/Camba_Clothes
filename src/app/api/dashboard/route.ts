@@ -48,10 +48,11 @@ export async function GET(req: NextRequest) {
     ...(!isAdmin && { idUsuario: session.user.id }),
   }
 
-  const [ventas, ventasAnteriores, stockCriticoList] = await Promise.all([
+  const [ventas, ventasAnteriores, stockCriticoList, clientesConVentas] = await Promise.all([
     prisma.venta.findMany({
       where: ventaWhere,
       include: {
+        tipoPago: { select: { tipoMetodo: true } },
         detalles: {
           include: {
             producto: { select: { id: true, nombreProducto: true, costo: true, talla: true, color: true } },
@@ -68,17 +69,42 @@ export async function GET(req: NextRequest) {
           `SELECT id, "nombreProducto", talla, color, stock, "stockMinimo" FROM "Producto" WHERE estado = 'ACTIVO' AND stock <= "stockMinimo" ORDER BY stock ASC LIMIT 10`
         )
       : Promise.resolve([]),
+    prisma.cliente.findMany({
+      where: { estado: "ACTIVO" },
+      select: {
+        id: true,
+        nombre: true,
+        apPaterno: true,
+        ventas: {
+          where: { estado: "COMPLETADA" },
+          select: { id: true, total: true },
+        },
+      },
+    }),
   ])
 
   const ventasTotales = ventas.reduce((acc, v) => acc + Number(v.total), 0)
   const cantidadTransacciones = ventas.length
   const ticketPromedio = cantidadTransacciones > 0 ? ventasTotales / cantidadTransacciones : 0
 
-  const productMap = new Map<number, { id: number; nombreProducto: string; talla: string; color: string; cantidadVendida: number; totalVendido: number; sumMargen: number }>()
+  const productMap = new Map<number, { id: number; nombreProducto: string; talla: string; color: string; cantidadVendida: number; totalVendido: number }>()
   let totalMargenPonderado = 0
   let totalSubtotal = 0
 
+  // Ventas por tipo de pago
+  const tipoPagoMap = new Map<string, number>()
+  // Ventas por día
+  const ventasPorDiaMap = new Map<string, number>()
+
   for (const venta of ventas) {
+    // Tipo de pago aggregation
+    const tp = venta.tipoPago.tipoMetodo
+    tipoPagoMap.set(tp, (tipoPagoMap.get(tp) || 0) + Number(venta.total))
+
+    // Ventas por día
+    const diaKey = venta.fecha.toISOString().split("T")[0]
+    ventasPorDiaMap.set(diaKey, (ventasPorDiaMap.get(diaKey) || 0) + Number(venta.total))
+
     for (const det of venta.detalles) {
       const costo = Number(det.producto.costo)
       const precio = Number(det.precio)
@@ -100,7 +126,6 @@ export async function GET(req: NextRequest) {
           color: det.producto.color,
           cantidadVendida: det.cantidad,
           totalVendido: subtotal,
-          sumMargen: 0,
         })
       }
     }
@@ -115,6 +140,29 @@ export async function GET(req: NextRequest) {
   const ventasAnterior = ventasAnteriores.reduce((acc, v) => acc + Number(v.total), 0)
   const porcentajeCambio = ventasAnterior > 0 ? ((ventasTotales - ventasAnterior) / ventasAnterior) * 100 : ventasTotales > 0 ? 100 : 0
 
+  // Segmentación de clientes
+  let frecuentes = 0
+  let ocasionales = 0
+  let nuevos = 0
+  for (const c of clientesConVentas) {
+    const total = c.ventas.length
+    if (total >= 5) frecuentes++
+    else if (total >= 2) ocasionales++
+    else if (total === 1) nuevos++
+  }
+
+  const ventasPorTipoPago = Array.from(tipoPagoMap.entries()).map(([nombre, total]) => ({
+    nombre,
+    total,
+  }))
+
+  const ventasPorDia = Array.from(ventasPorDiaMap.entries())
+    .sort((a, b) => a[0].localeCompare(b[0]))
+    .map(([fecha, total]) => ({
+      fecha,
+      total,
+    }))
+
   return NextResponse.json({
     ventasTotales,
     cantidadTransacciones,
@@ -123,5 +171,13 @@ export async function GET(req: NextRequest) {
     comparativa: { ventasAnterior, porcentajeCambio },
     topProductos,
     stockCritico: stockCriticoList,
+    segmentacionClientes: {
+      frecuentes,
+      ocasionales,
+      nuevos,
+      total: clientesConVentas.length,
+    },
+    ventasPorTipoPago,
+    ventasPorDia,
   })
 }

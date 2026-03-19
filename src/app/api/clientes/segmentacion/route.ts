@@ -7,7 +7,8 @@ export type Segmento = "FRECUENTE" | "OCASIONAL" | "NUEVO"
 
 function calcularSegmento(totalCompras: number): Segmento {
   if (totalCompras >= 5) return "FRECUENTE"
-  if (totalCompras >= 1) return "OCASIONAL"
+  if (totalCompras >= 2) return "OCASIONAL"
+  if (totalCompras === 1) return "NUEVO"
   return "NUEVO"
 }
 
