@@ -42,13 +42,25 @@ export async function GET(req: NextRequest) {
     ...(!isAdmin && { idUsuario: session.user.id }),
   }
 
+  const ventaAnuladaWhere = {
+    estado: "ANULADA" as const,
+    fecha: { gte: desde, lte: hasta },
+    ...(!isAdmin && { idUsuario: session.user.id }),
+  }
+
   const ventaWhereAnterior = {
     estado: "COMPLETADA" as const,
     fecha: { gte: desdeAnterior, lt: desde },
     ...(!isAdmin && { idUsuario: session.user.id }),
   }
 
-  const [ventas, ventasAnteriores, stockCriticoList, clientesConVentas] = await Promise.all([
+  const [
+    ventas, 
+    ventasAnteriores,
+    ventasAnuladasCount,
+    productosAll, 
+    clientesConVentas
+  ] = await Promise.all([
     prisma.venta.findMany({
       where: ventaWhere,
       include: {
@@ -62,12 +74,16 @@ export async function GET(req: NextRequest) {
     }),
     prisma.venta.findMany({
       where: ventaWhereAnterior,
-      select: { total: true },
+      include: {
+        detalles: { include: { producto: { select: { costo: true } } } }
+      }
     }),
-    isAdmin
-      ? prisma.$queryRawUnsafe<Array<{ id: number; nombreProducto: string; talla: string; color: string; stock: number; stockMinimo: number }>>(
-          `SELECT id, "nombreProducto", talla, color, stock, "stockMinimo" FROM "Producto" WHERE estado = 'ACTIVO' AND stock <= "stockMinimo" ORDER BY stock ASC LIMIT 10`
-        )
+    prisma.venta.count({ where: ventaAnuladaWhere }),
+    isAdmin 
+      ? prisma.producto.findMany({
+        where: { estado: 'ACTIVO' },
+        select: { id: true, nombreProducto: true, stock: true, stockMinimo: true, costo: true, talla: true, color: true }
+      })
       : Promise.resolve([]),
     prisma.cliente.findMany({
       where: { estado: "ACTIVO" },
@@ -77,47 +93,42 @@ export async function GET(req: NextRequest) {
         apPaterno: true,
         ventas: {
           where: { estado: "COMPLETADA" },
-          select: { id: true, total: true },
+          select: { id: true, total: true, fecha: true },
+          orderBy: { fecha: 'asc' }
         },
       },
     }),
   ])
 
-  const ventasTotales = ventas.reduce((acc, v) => acc + Number(v.total), 0)
-  const cantidadTransacciones = ventas.length
-  const ticketPromedio = cantidadTransacciones > 0 ? ventasTotales / cantidadTransacciones : 0
+  // --- FINANZAS ---
+  const ventasTotales = ventas.reduce((acc, v) => acc + Number(v.total), 0) // Ingresos Brutos
+  let costoTotalVentas = 0
+  let gananciaBruta = 0
 
+  // Top productos y ventas por dia para los graficos
   const productMap = new Map<number, { id: number; nombreProducto: string; talla: string; color: string; cantidadVendida: number; totalVendido: number }>()
-  let totalMargenPonderado = 0
-  let totalSubtotal = 0
-
-  // Ventas por tipo de pago
-  const tipoPagoMap = new Map<string, number>()
-  // Ventas por día
-  const ventasPorDiaMap = new Map<string, number>()
+  
+  // Guardamos Ingreso y Ganancia por día
+  const ventasPorDiaMap = new Map<string, { ingreso: number, ganancia: number }>()
 
   for (const venta of ventas) {
-    // Tipo de pago aggregation
-    const tp = venta.tipoPago.tipoMetodo
-    tipoPagoMap.set(tp, (tipoPagoMap.get(tp) || 0) + Number(venta.total))
-
-    // Ventas por día
     const diaKey = venta.fecha.toISOString().split("T")[0]
-    ventasPorDiaMap.set(diaKey, (ventasPorDiaMap.get(diaKey) || 0) + Number(venta.total))
+    const currentDia = ventasPorDiaMap.get(diaKey) || { ingreso: 0, ganancia: 0 }
+    currentDia.ingreso += Number(venta.total)
+
+    let gananciaVenta = 0;
 
     for (const det of venta.detalles) {
-      const costo = Number(det.producto.costo)
-      const precio = Number(det.precio)
-      const subtotal = Number(det.subtotal)
-      const margen = precio > 0 ? ((precio - costo) / precio) * 100 : 0
-
-      totalMargenPonderado += margen * subtotal
-      totalSubtotal += subtotal
+      const costo = Number(det.producto.costo) * det.cantidad
+      const rebajaReal = Number(det.precio) * det.cantidad
+      
+      costoTotalVentas += costo
+      gananciaVenta += (rebajaReal - costo)
 
       const existing = productMap.get(det.idProducto)
       if (existing) {
         existing.cantidadVendida += det.cantidad
-        existing.totalVendido += subtotal
+        existing.totalVendido += rebajaReal
       } else {
         productMap.set(det.idProducto, {
           id: det.producto.id,
@@ -125,59 +136,125 @@ export async function GET(req: NextRequest) {
           talla: det.producto.talla,
           color: det.producto.color,
           cantidadVendida: det.cantidad,
-          totalVendido: subtotal,
+          totalVendido: rebajaReal,
         })
+      }
+    }
+
+    gananciaBruta += gananciaVenta
+    currentDia.ganancia += gananciaVenta
+    ventasPorDiaMap.set(diaKey, currentDia)
+  }
+
+  const margenPromedio = ventasTotales > 0 ? (gananciaBruta / ventasTotales) * 100 : 0
+
+  // Comparativa ventas periodo anterior
+  const ventasAnterior = ventasAnteriores.reduce((acc, v) => acc + Number(v.total), 0)
+  const porcentajeCambio = ventasAnterior > 0 ? ((ventasTotales - ventasAnterior) / ventasAnterior) * 100 : ventasTotales > 0 ? 100 : 0
+
+  let gananciaAnterior = 0
+  for (const v of ventasAnteriores) {
+    for (const d of v.detalles as any[]) {
+      const costo = Number(d.producto.costo) * d.cantidad
+      // Note: we assume previous details didn't have explicitly recorded `precio` accessible easily in `select` before, but we added it.
+      // Wait, I should add `precio` to the `select` or we can just use `d.precio` since `include` gets everything.
+      const rebajaReal = Number(d.precio) * d.cantidad
+      gananciaAnterior += (rebajaReal - costo)
+    }
+  }
+  const porcentajeCambioGanancia = gananciaAnterior > 0 ? ((gananciaBruta - gananciaAnterior) / gananciaAnterior) * 100 : gananciaBruta > 0 ? 100 : 0
+
+  // --- CLIENTES ---
+  const cantidadTransacciones = ventas.length
+  const ticketPromedio = cantidadTransacciones > 0 ? ventasTotales / cantidadTransacciones : 0
+
+  // El sistema de clientes que estaba antes ( Segmentación )
+  let frecuentes = 0
+  let ocasionales = 0
+  let nuevos = 0
+  
+  // También calculamos los activos y nuevos del periodo actual solo para KPIs
+  let clientesActivos = 0
+  let nuevosDelPeriodo = 0
+  let frecuentesActivos = 0
+
+  for (const c of clientesConVentas) {
+    const totalVentas = c.ventas.length
+    if (totalVentas >= 5) frecuentes++
+    else if (totalVentas >= 2) ocasionales++
+    else if (totalVentas === 1) nuevos++
+
+    // Métricas del periodo
+    const comprasEnPeriodo = c.ventas.filter(v => v.fecha >= desde && v.fecha <= hasta)
+    if (comprasEnPeriodo.length > 0) {
+      clientesActivos++
+      
+      const primeraCompra = c.ventas[0]
+      if (primeraCompra && primeraCompra.fecha >= desde && primeraCompra.fecha <= hasta) {
+        nuevosDelPeriodo++
+      }
+
+      if (totalVentas >= 5) {
+        frecuentesActivos++
       }
     }
   }
 
-  const margenPromedio = totalSubtotal > 0 ? totalMargenPonderado / totalSubtotal : 0
+  // --- PROCESOS INTERNOS ---
+  const productosStockCriticoList = productosAll.filter(p => p.stock <= p.stockMinimo)
+  const productosStockCritico = productosStockCriticoList.length
 
+  // Calcular inventario valorado
+  const inventarioValoradoTotal = productosAll.reduce((acc, p) => acc + (Number(p.costo) * p.stock), 0)
+  
+  // Rotación = Costo Total de Ventas / Inventario Valorado Promedio (usando el actual como aprox)
+  const rotacionInventario = inventarioValoradoTotal > 0 ? costoTotalVentas / inventarioValoradoTotal : 0
+
+  // Tasa Anulación
+  const totalOperaciones = cantidadTransacciones + ventasAnuladasCount
+  const tasaAnulacion = totalOperaciones > 0 ? (ventasAnuladasCount / totalOperaciones) * 100 : 0
+
+
+  // --- DATOS PARA GRÁFICOS ---
   const topProductos = Array.from(productMap.values())
     .sort((a, b) => b.cantidadVendida - a.cantidadVendida)
     .slice(0, 5)
 
-  const ventasAnterior = ventasAnteriores.reduce((acc, v) => acc + Number(v.total), 0)
-  const porcentajeCambio = ventasAnterior > 0 ? ((ventasTotales - ventasAnterior) / ventasAnterior) * 100 : ventasTotales > 0 ? 100 : 0
-
-  // Segmentación de clientes
-  let frecuentes = 0
-  let ocasionales = 0
-  let nuevos = 0
-  for (const c of clientesConVentas) {
-    const total = c.ventas.length
-    if (total >= 5) frecuentes++
-    else if (total >= 2) ocasionales++
-    else if (total === 1) nuevos++
-  }
-
-  const ventasPorTipoPago = Array.from(tipoPagoMap.entries()).map(([nombre, total]) => ({
-    nombre,
-    total,
-  }))
-
   const ventasPorDia = Array.from(ventasPorDiaMap.entries())
     .sort((a, b) => a[0].localeCompare(b[0]))
-    .map(([fecha, total]) => ({
+    .map(([fecha, { ingreso, ganancia }]) => ({
       fecha,
-      total,
+      ingreso,
+      ganancia
     }))
 
   return NextResponse.json({
-    ventasTotales,
-    cantidadTransacciones,
-    ticketPromedio,
+    // Finanzas
+    ingresosBrutos: ventasTotales,
+    gananciaBruta,
     margenPromedio,
-    comparativa: { ventasAnterior, porcentajeCambio },
-    topProductos,
-    stockCritico: stockCriticoList,
+    comparativa: { ventasAnterior, porcentajeCambio, porcentajeCambioGanancia },
+    
+    // Clientes
+    clientesActivos,
+    clientesNuevos: nuevosDelPeriodo,
+    clientesFrecuentes: frecuentesActivos,
+    ticketPromedio,
     segmentacionClientes: {
       frecuentes,
       ocasionales,
       nuevos,
       total: clientesConVentas.length,
     },
-    ventasPorTipoPago,
+    
+    // Procesos Internos
+    rotacionInventario,
+    productosStockCritico,
+    tasaAnulacion,
+
+    // Listas/Gráficos
+    topProductos,
     ventasPorDia,
+    stockCriticoList: productosStockCriticoList.slice(0, 10) // Muestra max 10 en lista
   })
 }
