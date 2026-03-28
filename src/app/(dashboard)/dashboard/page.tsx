@@ -223,8 +223,8 @@ export default function DashboardPage() {
       {/* ── Header ── */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight text-slate-900">Cuadro de Mando</h1>
-          <p className="text-sm text-muted-foreground mt-1">Indicadores Estratégicos (KPIs) para {periodoLabel}</p>
+          <h1 className="text-3xl font-bold tracking-tight text-slate-900">Dashboard</h1>
+          <p className="text-sm text-muted-foreground mt-1">Indicadores Estratégicos para {periodoLabel}</p>
         </div>
         <Select value={periodo} onValueChange={setPeriodo}>
           <SelectTrigger className="w-40 bg-white shadow-sm">

@@ -95,6 +95,10 @@ export default function LoginPage() {
             </Button>
           </form>
         </Form>
+        <div className="mt-4 rounded-md border border-dashed border-muted-foreground/30 bg-muted/50 px-4 py-3 text-center text-sm text-muted-foreground">
+          <p className="font-medium">Demo</p>
+          <p>Usuario: <span className="font-mono font-semibold text-foreground">admin</span> &middot; Contraseña: <span className="font-mono font-semibold text-foreground">admin123</span></p>
+        </div>
       </CardContent>
     </Card>
   )
