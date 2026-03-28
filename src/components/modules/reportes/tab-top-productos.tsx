@@ -29,7 +29,6 @@ export function TabTopProductos() {
   const [categorias, setCategorias] = useState<CategoriaOption[]>([])
   const [data, setData] = useState<TopProducto[]>([])
   const [loading, setLoading] = useState(false)
-  const [catsLoaded, setCatsLoaded] = useState(false)
 
   useEffect(() => {
     async function loadCategorias() {
@@ -37,7 +36,6 @@ export function TabTopProductos() {
         const res = await fetch("/api/categorias")
         const all: CategoriaOption[] = await res.json()
         setCategorias(all.filter((c: CategoriaOption & { estado?: string }) => !c.estado || c.estado === "ACTIVO"))
-        setCatsLoaded(true)
       } catch { /* ignore */ }
     }
     loadCategorias()
