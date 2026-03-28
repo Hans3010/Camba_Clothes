@@ -1,226 +1,146 @@
-# CambaClothes — Sistema POS
+# CambaClothes — Point of Sale System
 
-Sistema de gestión comercial interno para una boutique de ropa en Santa Cruz, Bolivia.
-Desarrollado como proyecto académico con Next.js 15 y PostgreSQL.
+A full-featured POS and inventory management system built for a clothing boutique. Handles sales, purchases, inventory tracking, customer management, cash register sessions, and reporting — all from a single dashboard.
 
-> **Uso interno en mostrador.** No es e-commerce, no tiene facturación fiscal ni pasarelas de pago externas.
+Built with **Next.js 15**, **PostgreSQL**, **Prisma**, and **shadcn/ui**.
 
----
-
-## Equipo
-
-| Nombre                     | Rol             |
-|----------------------------|-----------------|
-| Hans Ribera Morant         | Team Lead       |
-| John Jairo Zurita          | Desarrollador   |
-| Luis Merma Alarcon         | Scrum Master    |
-| Jhonnathan Mamani Canaviri | Desarrollador   |
+![Next.js](https://img.shields.io/badge/Next.js_15-000000?style=flat-square&logo=next.js&logoColor=white)
+![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?style=flat-square&logo=typescript&logoColor=white)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-4169E1?style=flat-square&logo=postgresql&logoColor=white)
+![Prisma](https://img.shields.io/badge/Prisma-2D3748?style=flat-square&logo=prisma&logoColor=white)
+![Tailwind](https://img.shields.io/badge/Tailwind_CSS-06B6D4?style=flat-square&logo=tailwindcss&logoColor=white)
 
 ---
 
-## Stack
+## Features
 
-- **Framework:** Next.js 15 (App Router) + TypeScript
-- **Base de datos:** PostgreSQL + Prisma ORM 7
-- **Autenticación:** NextAuth.js v4 (JWT)
-- **UI:** shadcn/ui + Tailwind CSS v4
-- **Formularios:** react-hook-form + zod
-- **Tablas:** @tanstack/react-table
+- **Point of Sale** — Fast product search, cart management, payment type selection, and receipt generation
+- **Inventory Management** — Real-time stock tracking with automatic updates on every sale, purchase, and manual adjustment
+- **Purchase Orders** — Register supplier purchases with automatic stock replenishment
+- **Customer Management** — Full CRUD with purchase history tracking
+- **Supplier Management** — Manage suppliers and link them to purchase orders
+- **Cash Register Sessions** — Open/close daily sessions, track cash flow per shift
+- **Dashboard & Reports** — KPIs, sales charts, and exportable reports
+- **Role-Based Access** — Admin and Vendor roles with route-level protection via middleware
+- **Soft Delete** — Records are deactivated, never hard-deleted, preserving data integrity
 
 ---
 
-## Requisitos previos
+## Tech Stack
+
+| Layer | Technology |
+|-------|-----------|
+| Framework | Next.js 15 (App Router) + TypeScript |
+| Database | PostgreSQL + Prisma ORM |
+| Auth | NextAuth.js v4 (JWT) |
+| UI | shadcn/ui + Tailwind CSS v4 |
+| Forms | react-hook-form + Zod validation |
+| Tables | @tanstack/react-table |
+
+---
+
+## Getting Started
+
+### Prerequisites
 
 - Node.js 20+
-- PostgreSQL corriendo localmente (o remoto)
+- PostgreSQL
 
----
-
-## Instalación
+### Installation
 
 ```bash
-# 1. Clonar el repositorio
 git clone https://github.com/Hans3010/Camba_Clothes.git
 cd camba-clothes
-
-# 2. Instalar dependencias
 npm install
-
-# 3. Configurar variables de entorno
-cp .env
-# Editar .env con tus credenciales de PostgreSQL
-
-# 4. Aplicar migraciones
-npx prisma generate
-
-npx prisma migrate dev
-
-# 5. Cargar datos iniciales
-npm run seed
-
-# 6. Levantar el servidor de desarrollo
-npm run dev
 ```
 
-Abrir [http://localhost:3000](http://localhost:3000)
+### Environment Variables
 
-**Credenciales de prueba:**
-```
-usuario: admin      | password: admin123
-usuario: vendedor   | password: vendedor123
-```
-
----
-
-## Variables de entorno
-
-Crear un archivo `.env` en la raíz :
+Create a `.env` file in the root:
 
 ```env
 DATABASE_URL="postgresql://USER:PASSWORD@localhost:5432/camba_clothes"
-NEXTAUTH_SECRET="un_secret_seguro_y_largo"
+NEXTAUTH_SECRET="your_secret_here"
 NEXTAUTH_URL="http://localhost:3000"
 ```
 
+### Database Setup
+
+```bash
+npx prisma generate
+npx prisma migrate dev
+npm run seed
+```
+
+### Run
+
+```bash
+npm run dev
+```
+
+Open [http://localhost:3000](http://localhost:3000)
+
+**Demo credentials:**
+```
+Admin:  admin / admin123
+Vendor: vendedor / vendedor123
+```
+
 ---
 
-## Scripts disponibles
+## Project Structure
 
-| Comando | Descripción |
-|---------|-------------|
-| `npm run dev` | Servidor de desarrollo |
-| `npm run build` | Build de producción |
-| `npm run seed` | Carga datos iniciales en la DB |
-| `npm run db:reset` | Resetea la DB y vuelve a seedear |
-
----
-
-## Estructura del proyecto
-
-```text
+```
 src/
 ├── app/
-│   ├── (auth)/               ← Páginas de login (sin sidebar)
-│   │   └── login/page.tsx
-│   ├── (dashboard)/          ← Todas las páginas protegidas
-│   │   ├── layout.tsx        ← Sidebar + Header compartido
-│   │   ├── caja/             ← Apertura/cierre de caja
-│   │   ├── categoria/        ← Gestión de categorías
-│   │   ├── clientes/         ← CRUD clientes
-│   │   ├── compras/          ← Registro de compras
-│   │   ├── configuracion/    ← Ajustes (roles, usuarios)
-│   │   ├── dashboard/        ← KPIs
-│   │   ├── inventario/       ← Movimientos de stock
-│   │   ├── pos/              ← Punto de venta
-│   │   ├── productos/        ← CRUD productos
-│   │   ├── proveedores/      ← CRUD proveedores
-│   │   ├── reportes/         ← Gráficos y reportes
-│   │   └── ventas/           ← Historial de ventas
-│   └── api/                  ← API Routes (Next.js)
+│   ├── (auth)/               # Login pages (no sidebar)
+│   ├── (dashboard)/          # Protected pages
+│   │   ├── pos/              # Point of sale
+│   │   ├── ventas/           # Sales history
+│   │   ├── compras/          # Purchase orders
+│   │   ├── productos/        # Product CRUD
+│   │   ├── inventario/       # Stock movements
+│   │   ├── clientes/         # Customer CRUD
+│   │   ├── proveedores/      # Supplier CRUD
+│   │   ├── caja/             # Cash register sessions
+│   │   ├── categoria/        # Category management
+│   │   ├── configuracion/    # Settings (roles, users)
+│   │   ├── dashboard/        # KPIs & overview
+│   │   └── reportes/         # Charts & reports
+│   └── api/                  # API Routes
 ├── components/
-│   ├── forms/                ← Formularios interactivos
-│   ├── layout/               ← Sidebar y Header
-│   ├── modules/              ← Componentes modulares complejos
-│   ├── pos/                  ← Componentes del punto de venta
-│   ├── tables/               ← Columnas y DataTables por módulo
-│   └── ui/                   ← Componentes shadcn (NO editar)
-├── generated/
-│   └── prisma/               ← Tipos y cliente de Prisma generados
+│   ├── forms/                # Form components
+│   ├── layout/               # Sidebar & Header
+│   ├── modules/              # Complex module components
+│   ├── pos/                  # POS-specific components
+│   ├── tables/               # DataTable columns & config
+│   └── ui/                   # shadcn/ui (auto-generated)
 ├── lib/
-│   ├── prisma.ts             ← Singleton de PrismaClient
-│   ├── auth.ts               ← Configuración de NextAuth
-│   ├── utils.ts              ← Utilidades (cn, formatCurrency)
-│   └── validations/          ← Schemas de Zod por módulo
-├── types/
-│   └── next-auth.d.ts        ← Tipos extendidos de sesión
-├── hooks/                    ← Custom hooks
-└── middleware.ts             ← Protección de rutas
-prisma/
-├── schema.prisma             ← Esquema de la base de datos
-├── migrations/               ← Migraciones generadas automáticamente
-└── seed.ts                   ← Datos iniciales
-```
-
-### Dónde trabaja cada módulo
-
-| Módulo | Archivos a tocar |
-|--------|-----------------|
-| Auth / Usuarios | `app/(dashboard)/configuracion/`, `app/api/usuarios/`, `components/forms/` |
-| Productos | `app/(dashboard)/productos/`, `app/api/productos/`, `components/tables/` |
-| Clientes | `app/(dashboard)/clientes/`, `app/api/clientes/`, `components/forms/` |
-| Proveedores | `app/(dashboard)/proveedores/`, `app/api/proveedores/` |
-| POS / Ventas | `app/(dashboard)/pos/`, `app/(dashboard)/ventas/`, `app/api/ventas/`, `components/pos/` |
-| Compras | `app/(dashboard)/compras/`, `app/api/compras/` |
-| Inventario | `app/(dashboard)/inventario/`, `app/api/movimientos/` |
-| Dashboard / Reportes | `app/(dashboard)/dashboard/`, `app/(dashboard)/reportes/`, `app/api/reportes/` |
-
-> **Nunca editar** `src/components/ui/` ni `src/generated/prisma/` — son archivos generados automáticamente.
-
----
-
-## Flujo de trabajo con Git
-
-### Ramas
-
-```
-main      ← código estable y revisado (solo via PR)
-develop   ← rama de integración (aquí se trabaja)
-```
-
-**Regla principal: nunca hacer push directo a `main`.**
-Todo el trabajo va a `develop`. Cuando un módulo esté completo y revisado, se hace un Pull Request de `develop` → `main`.
-
-### Flujo recomendado
-
-```bash
-# Antes de empezar a trabajar, siempre actualizar develop
-git checkout develop
-git pull origin develop
-
-# Trabajar, hacer cambios...
-
-# Subir a develop
-git add src/app/(dashboard)/productos/ src/app/api/productos/
-git commit -m "feat(productos): agregar CRUD completo con tabla y formulario"
-git push origin develop
-```
-
-### Convención de commits
-
-Poner siempre una descripción corta. Opcionalmente agregar un cuerpo con los puntos más importantes.
-
-**Formato:**
-```
-descripción corta en presente
-
-- Detalle 1
-- Detalle 2
-```
-
-
-
-**Ejemplos:**
-```bash
-git commit -m "se agregó la tabla con filtro y paginación"
-
-git commit -m "se implementó el carrito y confirmación de venta
-
-- Búsqueda de productos por nombre
-- Agregar/quitar items del carrito
-- Selección de tipo de pago
-- Registro de venta con transacción Prisma"
-
+│   ├── prisma.ts             # PrismaClient singleton
+│   ├── auth.ts               # NextAuth config
+│   ├── utils.ts              # Helpers (cn, formatCurrency)
+│   └── validations/          # Zod schemas per module
+├── hooks/                    # Custom React hooks
+└── middleware.ts             # Route protection
 ```
 
 ---
 
-## Consideraciones importantes
+## Available Scripts
 
-- **Soft delete:** nunca usar `delete` en Prisma para registros con relaciones. Usar el campo `estado: "INACTIVO"` o `"ANULADO"`.
-- **Transacciones:** operaciones que afectan múltiples tablas (crear venta, registrar compra) deben usar `prisma.$transaction()`.
-- **Validación:** toda API Route debe validar el body con Zod antes de tocar la base de datos.
-- **Server vs Client Components:** por defecto todo es Server Component. Solo agregar `"use client"` cuando se necesiten hooks o eventos.
-- **Sesión de caja:** no se puede registrar una venta sin una `sesionCaja` con estado `"ABIERTA"`.
-- **Stock:** el campo `stock` vive en `Producto` y se actualiza atómicamente con cada venta/compra/ajuste.
-- **Moneda:** todo en BOB. Formatear precios como `Bs. 1,234.00`.
-- **Margen:** `((precioVenta - costo) / precioVenta) * 100`. Recalcular siempre que cambie precio o costo.
+| Command | Description |
+|---------|-------------|
+| `npm run dev` | Start dev server |
+| `npm run build` | Production build |
+| `npm run seed` | Seed initial data |
+| `npm run db:reset` | Reset DB and re-seed |
+
+---
+
+## Design Decisions
+
+- **Soft delete** — Records use `status: "INACTIVE"` instead of hard deletes to preserve relational integrity
+- **Atomic stock updates** — All operations affecting multiple tables use `prisma.$transaction()`
+- **Zod validation** — Every API route validates the request body before touching the database
+- **Server Components by default** — `"use client"` only when hooks or event handlers are needed
+- **Cash session enforcement** — Sales cannot be registered without an open cash register session
