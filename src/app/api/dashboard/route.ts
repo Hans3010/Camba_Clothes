@@ -154,10 +154,8 @@ export async function GET(req: NextRequest) {
 
   let gananciaAnterior = 0
   for (const v of ventasAnteriores) {
-    for (const d of v.detalles as any[]) {
+    for (const d of v.detalles) {
       const costo = Number(d.producto.costo) * d.cantidad
-      // Note: we assume previous details didn't have explicitly recorded `precio` accessible easily in `select` before, but we added it.
-      // Wait, I should add `precio` to the `select` or we can just use `d.precio` since `include` gets everything.
       const rebajaReal = Number(d.precio) * d.cantidad
       gananciaAnterior += (rebajaReal - costo)
     }
